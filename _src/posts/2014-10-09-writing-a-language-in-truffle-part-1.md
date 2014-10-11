@@ -350,19 +350,111 @@ public static Node check(TrufflerListNode l) {
 }
 ```
 
-### Special Forms
-
-When the reader reads a list where the first element is the name of a special form, the specific SpecialForm subclass object is returned instead of a normal List object. We do this at the reader level so the List type doesn't have to constantly check if the first element of the is a special form when evaluating. This will speed up evaluation of function calls.
+There's nothing special about checking for special forms. I just want to make sure they aren't evaluated as function calls. We'll go into more detail about special forms later. The reader checks for special forms so the list type doesn't have to constantly check if the first element of the is a special form when evaluating. This will speed up evaluation of function calls.
 
 
 Eval
 ----
 
-All the nodes the reader returns extend from the abstract class BaseNode. All subclasses must implement the `eval` method. `eval` takes an `Environment` variable that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) `eval` returns the itself. Actually, Number and Boolean return the boxed values of Long and java.lang.Boolean, respectively. This is because Java doesn't allow us to subclass Long and java.lang.Boolean or else we would've just returned `this` in both cases. The difference is subtle and doesn't really matter. For the `Function` type, we do return `this` since we this a custom-built type.
+All the nodes the reader returns extend from the abstract class `Node`. All `Node` does is define an abstract method `eval`. `eval` takes an `Environment` argumnet that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) `eval` returns the same object. Actually, Number and Boolean return the boxed values of `java.lang.Long` and `java.lang.Boolean`, respectively, because Java doesn't allow us to subclass `java.lang.Long` and `java.lang.Boolean`. If we could we would just returned `this` in those cases. The difference is subtle and doesn't really matter. For the `Function` type, we do return `this` since we define a custom type.
 
-`Symbol` is a little more complicated but only just. When `Symbol` is evaluated the name of the value is looked up in the `Environment` namepace and the value stored there is returned. Because Truffler is lexically scoped, the Environment's parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.
+```java
+public abstract class Node {
+    public abstract Object eval(Environment env);
+}
 
-The `List` type is evaluated as a function call. This means the that all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to a `Function` class and its `apply` method is called with the rest of the list elements passed as arguments. Builtin functions are subclasses of the `Function` class. User-defined functions are created with the lambda special form. The lambda special form creates an instantiation of an anonymous inner class that subclasses `Function`. These are the only two places that `Function` is implemented. If any other value is the first element of the list a `ClassCastException` is thrown.
+public class Number extends Node {
+    private final Long num;
+    public Number(Long num) {
+        this.num = num;
+    }
+
+    @Override
+    public Object eval(Environment env) {
+        return this.num;
+    }
+
+}
+
+public class Function extends Node {
+    // other code...
+
+    @Override
+    public Object eval(Environment env) {
+        return this;
+    }
+}
+```
+
+`Symbol` is a little more complicated but only just. When `Symbol` is evaluated the name of the value is looked up in the `Environment` namepace and the value stored there is returned.
+
+
+```java
+public class SymbolNode extends Node {
+    private String name;
+    public SymbolNode(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public Object eval(Environment env) {
+        return env.getValue(this.name);
+    }
+}
+```
+
+
+The Environment class is just a simple mapping between strings and objects. Because Truffler is lexically scoped, the Environment's parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.
+
+```java
+public class Environment {
+    private final HashMap<String, Object> env = new HashMap<String, Object>();
+
+    private final Environment parent;
+    public Environment() {
+        this(null);
+    }
+
+    public Environment(Environment parent) {
+        this.parent = parent;
+    }
+
+    public Object getValue(String name) {
+        if (this.env.containsKey(name)) {
+            return this.env.get(name);
+        } else if (this.parent != null) {
+            return this.parent.getValue(name);
+        } else {
+            throw new RuntimeException("No variable: " + name);
+        }
+    }
+
+    public void putValue(String name, Object value) {
+        this.env.put(name, value);
+    }
+}
+```
+
+`TrufflerListNode` is evaluated as a function call. This means the that all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to the `Function` class and its `apply` method is called with the rest of the list elements passed as arguments.
+
+```java
+public class TrufflerListNode extends Node implements Iterable<Node> {
+    // other code...
+
+    @Override
+    public Object eval(Environment env) {
+        Fn fn = (Fn) this.car.eval(env);
+
+        List<Object> args = new ArrayList<Object>();
+        for (Node node : this.cdr) {
+            args.add(node.eval(env));
+        }
+        return fn.apply(args.toArray());
+    }
+}
+```
+
+Builtin functions are subclasses of the `Function` class. User-defined functions are created with the lambda special form. The lambda special form creates an instantiation of an anonymous inner class that subclasses `Function`. These are the only two places that `Function` is implemented. If any other value is the first element of the list a `ClassCastException` is thrown.
 
 The top node's return value of `eval` is returned.
 
