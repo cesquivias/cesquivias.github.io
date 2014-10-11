@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+ <title type="text">My Awesome Blog: Posts tagged 'bar'</title>
+ <link rel="self" href="http://www.example.com/feeds/bar.atom.xml" />
+ <link href="http://www.example.com/tags/bar.html" />
+ <id>urn:http-www-example-com:-tags-bar-html</id>
+ <updated>2012-01-01T00:00:00Z</updated>
+ <entry>
+  <title type="text">A 2012 blog post</title>
+  <link rel="alternate" href="http://www.example.com/blog/2012/01/01/a-2012-blog-post/?utm_source=bar&amp;utm_medium=Atom" />
+  <id>urn:http-www-example-com:-blog-2012-01-01-a-2012-blog-post</id>
+  <published>2012-01-01T00:00:00Z</published>
+  <updated>2012-01-01T00:00:00Z</updated>
+  <author>
+   <name>The Unknown Author</name></author>
+  <content type="html">&lt;html&gt;
+&lt;p&gt;Here is an example blog post.&lt;/p&gt;
+
+&lt;p&gt;Everything after this paragraph &amp;ldquo;after the break&amp;rdquo;. On index pages and Atom feeds, it will become &amp;ldquo;Continue reading&amp;hellip;&amp;rdquo;, if you configure them to include only the summary &amp;ldquo;blurb&amp;rdquo; before the break.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;some code&lt;/code&gt;&lt;/pre&gt;
+&lt;!-- more--&gt;
+
+&lt;p&gt;Here&amp;rsquo;s some &lt;a href="http://bullshitipsum.com/?paragraphs=2"&gt;Bullshit Ipsum&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Addelivery integrate ecologies e-markets standards-compliant utilize technologies aggregate addelivery viral&amp;mdash;communities dynamic functionalities. Mindshare engineer viral A-list: cross-platform remix engage social cross-media social innovate distributed matrix experiences monetize utilize innovative. Action-items transition recontextualize sexy Cluetrain envisioneer, &amp;ldquo;vortals communities evolve technologies sexy methodologies.&amp;rdquo; Enhance grow compelling iterate architect matrix plug-and-play reinvent scale, distributed incentivize, extend.&lt;/p&gt;
+
+&lt;p&gt;Revolutionary proactive. Target; envisioneer e-services sticky robust morph users methodologies, markets content supply-chains, granular monetize reinvent harness initiatives. Plug-and-play productize vortals integrate compelling aggregate, user-contributed, integrate web-enabled grow extend mindshare, repurpose world-class harness next-generation eyeballs solutions blogospheres extend. Rss-capable methodologies, &amp;ldquo;vortals vertical,&amp;rdquo; synthesize real-time user-contributed impactful utilize architect deploy ROI redefine design proactive strategic user-centric.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a footnote&lt;sup&gt;&lt;a href="#2012-01-01-a-2012-blog-post-footnote-1-definition" name="2012-01-01-a-2012-blog-post-footnote-1-return"&gt;1&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;h2 id="code-blocks"&gt;Code blocks&lt;/h2&gt;
+
+&lt;p&gt;Frog optionally uses &lt;a href="http://pygments.org/"&gt;Pygments&lt;/a&gt; if it&amp;rsquo;s installed to do syntax highlighting. In your markdown using backtick code blocks you can specify a language:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;```language
+some racket code
+```&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That name is given to Pygments as the lexer to use.&lt;/p&gt;
+
+&lt;p&gt;For example this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;```js
+/**
+ * Some JavaScript
+ */
+function foo()
+{
+    if (counter &amp;lt;= 10)
+        return;
+    // it works!
+```&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yields this:&lt;/p&gt;
+
+&lt;div class="brush: js"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1
+2
+3
+4
+5
+6
+7
+8&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt; * Some JavaScript&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;counter&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;=&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="c1"&gt;// it works!&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;And this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;```racket
+#lang racket
+;; Finds Racket sources in all subdirs
+(for ([path (in-directory)])
+  (when (regexp-match? #rx"[.]rkt$" path)
+    (printf "source file: ~a\n" path)))
+(symbol-&amp;gt;string 'foo)
+```&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yields this:&lt;/p&gt;
+
+&lt;div class="brush: racket"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1
+2
+3
+4
+5
+6&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="kn"&gt;#lang racket&lt;/span&gt;
+&lt;span class="c1"&gt;;; Finds Racket sources in all subdirs&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;&lt;a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for))" style="color: inherit"&gt;for&lt;/a&gt;&lt;/span&gt; &lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="nf"&gt;path&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;&lt;a href="http://docs.racket-lang.org/reference/sequences.html#(def._((lib._racket/private/base..rkt)._in-directory))" style="color: inherit"&gt;in-directory&lt;/a&gt;&lt;/span&gt;&lt;span class="p"&gt;)])&lt;/span&gt;
+  &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;&lt;a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._when))" style="color: inherit"&gt;when&lt;/a&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;&lt;a href="http://docs.racket-lang.org/reference/regexp.html#(def._((quote._~23~25kernel)._regexp-match~3f))" style="color: inherit"&gt;regexp-match?&lt;/a&gt; &lt;/span&gt;&lt;span class="sr"&gt;#rx"[.]rkt$"&lt;/span&gt; &lt;span class="nv"&gt;path&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;&lt;a href="http://docs.racket-lang.org/reference/Writing.html#(def._((quote._~23~25kernel)._printf))" style="color: inherit"&gt;printf&lt;/a&gt; &lt;/span&gt;&lt;span class="s"&gt;"source file: ~a\n"&lt;/span&gt; &lt;span class="nv"&gt;path&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;&lt;a href="http://docs.racket-lang.org/reference/symbols.html#(def._((quote._~23~25kernel)._symbol-~3estring))" style="color: inherit"&gt;symbol-&amp;gt;string&lt;/a&gt; &lt;/span&gt;&lt;span class="ss"&gt;'foo&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Notice that, for Racket, symbols with unambiguous documentation (provided by one library, or provided by several where one is &lt;code&gt;racket&lt;/code&gt; or &lt;code&gt;racket/base&lt;/code&gt;) are links to that documentation.&lt;/p&gt;
+
+&lt;p&gt;This also works outside fenced code blocks, for symbols in backticks immediately followed by &lt;code&gt;[racket]&lt;/code&gt;. Example: &lt;code&gt;&lt;a href="http://docs.racket-lang.org/reference/Writing.html#(def._((quote._~23~25kernel)._printf))" style="color: inherit"&gt;printf&lt;/a&gt;&lt;/code&gt;. This isn&amp;rsquo;t official Markdown; it&amp;rsquo;s simply a pun on link syntax and fenced code block languages. This is similar to using &lt;code&gt;@racket[printf]&lt;/code&gt; in Scribble.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;&lt;a href="http://docs.racket-lang.org/reference/symbols.html#(def._((quote._~23~25kernel)._symbol-~3estring))" style="color: inherit"&gt;symbol-&amp;gt;string&lt;/a&gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here is a lambda: λ.&lt;/p&gt;
+
+&lt;p&gt;Here is a lambda in code backticks: &lt;code&gt;λ&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;And here in indented code block:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(λ () #t)&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And here in fenced code block, no lang specified:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(λ () #t)&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And here in fenced code block, lang = &lt;code&gt;racket&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class="brush: racket"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;&lt;a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit"&gt;λ&lt;/a&gt;&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="no"&gt;#t&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;And here in fenced code block, lang = &lt;code&gt;scheme&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class="brush: scheme"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;λ&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="no"&gt;#t&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a simple &lt;code&gt;for&lt;/code&gt; macro, written in &lt;a href="http://docs.racket-lang.org/reference/stx-patterns.html"&gt;Racket&lt;/a&gt;:&lt;/p&gt;
+
+&lt;div class="brush: racket"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1
+2&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;&lt;a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/misc..rkt)._define-syntax-rule))" style="color: inherit"&gt;define-syntax-rule&lt;/a&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;&lt;a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for))" style="color: inherit"&gt;for&lt;/a&gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;x&lt;/span&gt; &lt;span class="nv"&gt;e1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;e2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;&lt;a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._for-each))" style="color: inherit"&gt;for-each&lt;/a&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;&lt;a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit"&gt;λ&lt;/a&gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;e2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;e1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The end.&lt;/p&gt;
+
+&lt;div class="footnotes"&gt;
+ &lt;ol&gt;
+  &lt;li id="2012-01-01-a-2012-blog-post-footnote-1-definition" class="footnote-definition"&gt;
+   &lt;p&gt;Footnote definition.&amp;nbsp;&lt;a href="#2012-01-01-a-2012-blog-post-footnote-1-return"&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;/html&gt;</content></entry></feed>
