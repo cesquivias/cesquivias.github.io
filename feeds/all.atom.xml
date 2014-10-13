@@ -4,13 +4,13 @@
  <link rel="self" href="http://cesquivias.github.io/feeds/all.atom.xml" />
  <link href="http://cesquivias.github.io/index.html" />
  <id>urn:http-cesquivias-github-io:-index-html</id>
- <updated>2014-10-09T23:25:17Z</updated>
+ <updated>2014-10-13T23:25:17Z</updated>
  <entry>
   <title type="text">Writing a Language in Truffle: Part 1</title>
-  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/09/writing-a-language-in-truffle-part-1/?utm_source=all&amp;utm_medium=Atom" />
-  <id>urn:http-cesquivias-github-io:-blog-2014-10-09-writing-a-language-in-truffle-part-1</id>
-  <published>2014-10-09T23:25:17Z</published>
-  <updated>2014-10-09T23:25:17Z</updated>
+  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=all&amp;utm_medium=Atom" />
+  <id>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</id>
+  <published>2014-10-13T23:25:17Z</published>
+  <updated>2014-10-13T23:25:17Z</updated>
   <author>
    <name>Cristian Esquivias</name></author>
   <content type="html">&lt;html&gt;

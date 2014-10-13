@@ -4,14 +4,14 @@
   <title>Cristian Esquivias: Cristian Esquivias</title>
   <description>Cristian Esquivias: Cristian Esquivias</description>
   <link>http://cesquivias.github.io/index.html</link>
-  <lastBuildDate>Thu, 09 Oct 2014 23:25:17 PDT</lastBuildDate>
-  <pubDate>Thu, 09 Oct 2014 23:25:17 PDT</pubDate>
+  <lastBuildDate>Mon, 13 Oct 2014 23:25:17 PDT</lastBuildDate>
+  <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
   <ttl>1800</ttl>
   <item>
    <title>Writing a Language in Truffle: Part 1</title>
-   <link>http://cesquivias.github.io/blog/2014/10/09/writing-a-language-in-truffle-part-1/?utm_source=all&amp;utm_medium=RSS</link>
-   <guid>urn:http-cesquivias-github-io:-blog-2014-10-09-writing-a-language-in-truffle-part-1</guid>
-   <pubDate>Thu, 09 Oct 2014 23:25:17 PDT</pubDate>
+   <link>http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=all&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</guid>
+   <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
    <description>&lt;html&gt;
 &lt;p&gt;Ever since implementing a &lt;a href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html"&gt;meta circular evaluator&lt;/a&gt; in college I&amp;rsquo;ve enjoyed implementing little lisp interpreters in languages. It&amp;rsquo;s one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to &lt;a href="http://norvig.com/lispy.html"&gt;a better python lisp interpreter&lt;/a&gt;. Nonetheless, it&amp;rsquo;s a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.&lt;/p&gt;
 
