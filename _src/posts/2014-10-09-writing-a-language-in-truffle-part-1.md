@@ -5,24 +5,24 @@
 Intro
 =====
 
-Ever since implementing a [meta circular evaluator](https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html) in college I've enjoyed implementing little lisp interpreters in languages. It's one of those learning projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know that Peter Norvig beat me to [a better python lisp interpreter](http://norvig.com/lispy.html). Nonetheless, it's a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.
+Ever since implementing a [meta circular evaluator](https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html) in college I've enjoyed implementing little lisp interpreters in languages. It's one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to [a better python lisp interpreter](http://norvig.com/lispy.html). Nonetheless, it's a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.
 
-Of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; and who wants to do that? If you want to target higher level virtual machines like the JVM you're left with writing a compiler that takes your code and produces JVM bytecode. Or how about writing a compiler that targets Javascript? Another not-so-fun alternative.
+Of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; who wants to do that? If you want to target higher level virtual machines like the JVM you're left with writing a compiler that takes your code and produces JVM bytecode. How about writing a compiler that targets Javascript? Another not-so-fun alternative.
 
-Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. [PyPy](http://pypy.org/) has been around for a few years and has grown into such an environment. It originally started as new Python interpreter written in a smaller, more restricted version of Python appropriately named RPython (R = restricted). You don't get all the syntactic goodness of regular Python but it sure beats writing your interpreter in C. The developers have made herculean efforts to create a VM that can take a high level language like Python and make it fast even when written in a still high level language like RPython. It's so good it's [faster than the standard CPython](http://speed.pypy.org/) implementation in most benchmarks. It's such a promising platform there's an implementation of Ruby called [Topaz](http://topazruby.com/) that is already performing [faster in some benchmarks](http://mail.openjdk.java.net/pipermail/mlvm-dev/2013-February/005214.html) than the much more established implementations like JRuby. Exciting stuff, but now PyPy isn't the only game in town.
+Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. [PyPy](http://pypy.org/) has been around for a few years and has grown into such an environment. It originally started as a new Python interpreter written in a smaller, more restricted version of Python appropriately named RPython (R = restricted). You don't get all the syntactic goodness of regular Python but, it sure beats writing your interpreter in C. The developers have made herculean efforts to create a VM that can take a high level language like Python and make it fast even when written in a still high level language like RPython. It's so good it's [faster than the standard CPython](http://speed.pypy.org/) implementation in most benchmarks. It's such a promising platform there's an implementation of Ruby called [Topaz](http://topazruby.com/) that is already performing [faster in some benchmarks](http://mail.openjdk.java.net/pipermail/mlvm-dev/2013-February/005214.html) than the much more established implementations like JRuby. Exciting stuff, but now PyPy isn't the only game in town.
 
-Oracle labs has [released its own VM](http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html) that hopes to achieve the same results as PyPy but that leverages the huge ecosystem of the JVM. Oracle labs has released a custom version of the JVM that contains a new JIT compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal's JIT-y goodness you'll have to use the Truffle library to annotation your interpreter and give Graal some hints on invariants and type information. For this integration you get significant speedups in your interpreter without having to resort to writing a bytecode compiler and having the full power of Java at your disposal.
+Oracle labs has [released its own VM](http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html) that hopes to achieve the same results as PyPy but that leverages the huge ecosystem of the Java Virtual Machine (JVM). This modified JVM contains a new Just-In-Time (JIT) compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal's JIT-y goodness you use the Truffle library to annotate your interpreter and give Graal some hints on invariants and type information. For this integration effort you get significant speedups in your interpreter without having to resort to writing a bytecode compiler plus you have the full power of Java at your disposal.
 
-The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google's V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it's existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizer compiler, *and* you get speeds of implementations that took man-years (decades?) to creates. Where do I sign up?
+The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google's V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it's existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizing compiler, *and* you get speeds that took other languages man-years (man-decades?) to achieve. Where do I sign up?
 
 To see if the claims are true I'm going to write another simple Lisp language which I'll unimaginatively call Truffler and see how easy it is. I'll write a simple, non-Truffle interpreter and judge how easy it is to translate to Truffle. I'll take benchmarks to see what kind of speed gains we get by switching over to Truffle. If everything goes well, perhaps this proof of concept will reach speeds comparable to other production-quality lisps like Clojure, Racket or CHICKEN (scheme), but I'm getting ahead of myself.
 
 Truffler Language
 =================
 
-I'm going to try to try a tough balance between simplicity and useful features. I don't want a language that's too simple that it's a strawman, but I don't want to spend too much time writing a language I intend to throw away. Truffler will be a simple but fullblown language. I'll stick to basic datatypes and little-to-no syntactic sugar.
+I'm going to try to keep a balance between simplicity and useful features. I don't want a language that's so simple that it's a strawman, but I don't want to spend too much time writing a language I intend to throw away. Truffler will be a simple but fullblown language. I'll stick to basic datatypes and little-to-no syntactic sugar.
 
-For those unfamiliar with lisps, the language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.
+For those unfamiliar with lisps, it operates much like other dynamic languages. The biggest difference to most people is all the parentheses in the syntax, but they are there for a reason. Lisp programs are written in its own datatypes. This means that every element you see in Truffler (and all lisps) is the same datatype you use within your own program. This uniformity gives lisps a lot of power which Truffler sadly doesn't tap for the sake of brevity. The language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.
 
 Datatypes
 ---------
@@ -33,21 +33,24 @@ Datatypes
 
   - Boolean (i.e., `#t`, `#f`)
 
-    Nothing to special here. The tokens `#t` and `#f` will evaluate to the Java static final values `Boolean.TRUE` and `Boolean.FALSE`, respectively.
+    Nothing special here. The tokens `#t` and `#f` will evaluate to the Java static final values `Boolean.TRUE` and `Boolean.FALSE`, respectively.
 
   - Symbol (e.g., `var`, `some-variable`)
 
-    Symbols are kind of unique to lisps. If you're not familiar with them, they're string-like but are typically used for keys in maps. Think of symbols in Ruby if you're familiar with Ruby but without the `:` in the front. Symbols are show their uniqueness when they're evaluated.
+    Symbols are kind of unique to lisps. If you're not familiar with them, they're string-like but are typically used for keys. Think of symbols in Ruby if you're familiar with Ruby but without the `:` in the front. Symbols show their uniqueness when they're evaluated.
 
   - Function (e.g., `(lambda (x) (+ x 1))`)
 
-    Functions are written with the `lambda` special form. Functions are first class values that can be stored in a variable, passed to another function or returned in a function.
+    Functions are written with the `lambda` special form. Functions are first class values that can be stored in a variable, passed to another function or returned by a function.
 
   - List (e.g., `(1 2 3)`, `(a list of symbols)`)
 
-    List are the only way to make compound structures in Truffler. It's a little limiting but it's plenty for our little language.
+    Lists are the only way to make compound structures in Truffler. It's a little limiting but it's plenty for our little language.
 
     Lists are implemented as singly-linked lists. There are pros and cons with this implementation, but it's the traditional implementation in lisps. We're not blazing any trails here with language design so we'll stick with the tried and true implementation.
+
+    The empty list `()` acts as Trufflers `null` value.
+
 
 Syntax
 ------
@@ -73,21 +76,21 @@ Evaluation
 
 To keep with our theme of simple, evaluation is as basic as we can make it. The program is evaluated from top to bottom. That means that a variable definition must appear before its use. Everything is an expression. Since Truffler programs are made of Truffler datatypes every datatype has a well-defined evaluation strategy.
 
-  - Number
+  - Number (e.g., `1`, `4929`)
 
     Numbers evaluate to themselves. That is, a number returns a number. Shocking, I know.
 
-  - Boolean
+  - Boolean (e.g., `#f`)
 
     Booleans evaluate to themselves. Same as above.
 
-  - Symbol
+  - Symbol (e.g, `a-variable`, `a-variable-that-contains-a-function`)
 
     Symbols evaluate by returning looking the current namespace and return the value with the same name as the symbol. When you say `some-variable` the interpreter will see a symbol and try to evaluate it by looking in the current namespace for something stored under `"some-variable"`.
 
-  - List
+  - List (e.g., `(+ 1 2 3)`)
 
-  Lists are evaluated as function calls. Every element in the list is evaluated before the function is applied to its arguments. The first element must evaluate to a function. The rest of the elements are the arguments. The arguments are mapped to the formal parameter names before the body of the function is called. The last expression in the function body is the return value.
+    Lists are evaluated as function calls. Every element in the list is evaluated before the function is applied to its arguments. The first element must evaluate to a function. The rest of the elements are the arguments. The arguments are mapped to the formal parameter names before the body of the function is called. The last expression in the function body is the return value.
 
 Scoping
 -------
@@ -99,13 +102,13 @@ Truffler doesn't have blocks (the list of statements within `{}` in languages li
 Special Forms
 -------------
 
-The evaluation process for function calls of evaluating all the arguments doesn't work in certain circumstances. In these cases we've defined unique evaluation schemes typically called special forms.
+The evaluation process for function calls is defined to evaluate all the arguments, but we don't want this in certain circumstances. In these cases we've defined unique evaluation schemes called special forms.
 
   - `define`
 
     This creates a new variable within the current scope. `define` has to be a special form because the variable name doesn't exist yet (which is why we're calling `define`) and would throw an error for an undefined variable.
 
-    Example: `(define new-var 42)`
+    Example: `(define c 299792458)`
 
   - `lambda`
 
@@ -117,28 +120,30 @@ The evaluation process for function calls of evaluating all the arguments doesn'
 
   - `if`
 
-    The only control flow structure in Truffle. This works as you'd expect, the second element (the test expression) is evaluated, and if it's true the 3rd element (the "then" expression) is evaluated. If it's false the 4th element is evaluated. `if` has to be a special form because only the then or the else expression must be evaluated. If `if` was a normal function both clauses would be evaluated, and that would be bad.
+    The only control flow structure in Truffle. This works as you'd expect, the second element (the test expression) is evaluated, and if it's true the 3rd element (the "then" expression) is evaluated. If it's false the 4th element is evaluated. `if` has to be a special form because only the then or the else expression must be evaluated. If `if` was a normal function both clauses would be evaluated, the else expression would always return, and that would be bad.
 
-    Remember, `if` is an expression like everything else. It returns the result of evaluation of either the then or else expression. Lisp ifs are more like the C-style ternary operator: `test() ? then_result() : else_result`.
+    Remember, `if` is an expression like everything else. It returns the result of evaluation of either the then or else expression. Lisp ifs are more like the C-style ternary operator: `test() ? then_result() : else_result()`.
 
     Example: `(if (= x 0) (+ x 1) (- x 3))`
 
   - `quote`
 
-    This returns the argument with evaluation. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. `quote` allows us to do that. With lists you can use the `list` builtin function to get a list object, but symbols needs quote because there's no other way to get a Symbol object.
+    This returns the argument without evaluating it. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. `quote` allows us to do that. With lists you can use the `list` builtin function to get a list object, but symbols need `quote` because there's no other way to get a Symbol object.
 
-    Keep in mind, quote doesn't evaluate anything in its argument. That means if you pass a list it's elements are not evaluated. A symbol within an list will stay a simple. You're better off using the `list` function unless you really want a list of symbols.
+    Keep in mind, quote doesn't evaluate anything in its argument. That means if you pass a list it's elements are not evaluated. A symbol within a list will stay a symbol. You're better off using the `list` function unless you really want a list of symbols.
 
     Because numbers and booleans evaluate to themselves, quoting them doesn't do anything.
+
+    Example: `(quote (a list of undefined symbols))`
 
 With these few special forms we have a fully functional, Turing-complete programming language. We'll have to be creative in combining them to get the functionality we need, but that's part of the power of lisp.
 
 Builtin Functions
 -----------------
 
-Although we have a Turing-complete language that isn't much comfort if we can't do something useful with it like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There's nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.
+Although we have a Turing-complete language it isn't very useful if we can't do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There's nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.
 
-  - Arimetic functions (`+`, `-`, `*`, `/`, `%`)
+  - Arimetic functions (`+`, `-`, `*`, `/`, `%`, `=`, `>`, `<`)
 
     We have your basic arithmetic operations. Remember, Truffler only has integers so `/` does integer division and `%` is the modulo function.
 
@@ -146,11 +151,11 @@ Although we have a Turing-complete language that isn't much comfort if we can't 
 
     Our basic functions for creating, prepending and splicing lists. The names `cons`, `car`, `cdr` probably don't make sense if you're unfamiliar with lisp but they basically mean `prepend`, `first`, `rest` respectively. Again, we're sticking with lisp tradition here. For more background, you can read the Wikpedia article on [cons](http://en.wikipedia.org/wiki/Cons).
 
-  - IO functions (`println`)
+  - IO functions (`println`, `now`)
 
-    Since we're not planning to do any real work in Truffler, we'll just implement a function to send data to standard out and call it a day.
+    Since we're not planning to do any real work in Truffler, we'll just implement a function to send data to standard out and get a current timestamp.
 
-I may have to add more in the future but this is a good start.
+I may have to add more functions in the future but this is a good start.
 
 
 SimpleTruffler
@@ -164,9 +169,9 @@ Design
 
 The architecture will be a simple pipline from program text to evaluated result.
 
-        Read program text -> evaluate AST
+        Read program text and return tree of expressions -> evaluate tree
 
-The `Reader` class will encapsulate converting from program text and return the AST. The AST top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the evaluation will be dropped.
+The `Reader` class will encapsulate converting from program text and return the tree of Truffler expressions. The abstract syntax tree's (AST's) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.
 
 Our main class will look like:
 
@@ -180,7 +185,7 @@ public class SimpleTrufflerMain {
     private static void runTruffler(String filename) throws IOException {
         Environment topEnv = Environment.getBaseEnvironment();
 
-        TrufflerList nodes = Reader.read(new FileInputStream(filename));
+        TrufflerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
         for (Node node : nodes) {
             node.eval(topEnv);
         }
@@ -192,7 +197,7 @@ public class SimpleTrufflerMain {
 REPL
 ----
 
-We can add a small addition at basically no cost. We can take the basic flow described above and wrap it in a `while` loop and create a REPL. If you've ever used languages like Python, Ruby or the Javascript console in web browsers you know a REPL. The REPL takes the text passed to it by the user and follows the flow above but then prints out the result instead of dropping it. We wrap it all in a `while` loop so we always return back to the prompt.
+We can make a small addition at essentially no cost. We can take the basic flow described above and wrap it in a `while` loop and create a [REPL](http://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop). If you've ever used languages like Python, Ruby or the Javascript console in web browsers you know a REPL. The REPL takes the text passed to it by the user and follows the flow above but then prints out the result instead of dropping it. We wrap it all in a `while` loop so we always return back to the prompt.
 
 Our updated main class is:
 
@@ -218,7 +223,7 @@ public class SimpleTrufflerMain {
                 // EOF sent
                 break;
             }
-            TrufflerListNode nodes = Reader.read(
+            TrufflerListNode<Node> nodes = Reader.read(
                     new ByteArrayInputStream(data.getBytes()));
 
             // EVAL
@@ -228,14 +233,16 @@ public class SimpleTrufflerMain {
             }
 
             // PRINT
-            System.out.println(result);
+            if (result != TrufflerListNode.EMPTY) {
+                System.out.println(result);
+            }
         }
     }
 
     private static void runTruffler(String filename) throws IOException {
         Environment topEnv = Environment.getBaseEnvironment();
 
-        TrufflerListNode nodes = Reader.read(new FileInputStream(filename));
+        TrufflerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
         for (Node node : nodes) {
             node.eval(topEnv);
         }
@@ -243,15 +250,15 @@ public class SimpleTrufflerMain {
 }
 ```
 
-We're being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an `InputStream` into an abstract syntax tree.
+We're being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an `InputStream` into a tree of Truffler expressions.
 
 
 Reading
 -------
 
-We still need to convert out program text into an in-memory tree of expressions. Typically, languages break this up into two stages: lexing (text -> tokens), parsing (tokens -> syntax tree). I'm going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.
+Typically, languages break this up into two stages: lexing (text -> tokens), parsing (tokens -> syntax tree). I'm going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.
 
-The basic flow of the reader is to read one character then dispatch to specialized readers depending on the character read. Our `readNode` function:
+The basic flow of the reader is to read one character then dispatch to specialized read methods depending on the character read. Our `readNode` function:
 
 ```java
 public static Node readNode(PushbackReader pstream) throws IOException {
@@ -270,8 +277,6 @@ public static Node readNode(PushbackReader pstream) throws IOException {
     }
 }
 ```
-
-I call `unread` to push the read character back onto the stream so it token can be completely read by the called method. I always push it back on to be consistent. Nodes like lists and booleans don't technically need it. If you look at the [list](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/Reader.java#L76) and [boolean](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/Reader.java#L114) implementations you can see the only thing we do is assert the first character is what we expected.
 
 If you look closely at our implementation of SimpleTrufflerMain you'll see that we call `Reader.read` and it returns a TrufflerListNode. Our `read` method can read multiple nodes at once and return them all. The `read` method:
 
@@ -297,7 +302,7 @@ private static TrufflerListNode read(PushbackReader pstream)
 }
 ```
 
-Within `Reader` we only deal with `PushbackReader` objects. The only public method `read(InputStream istream)` just converts the `InputStream` to a `PushbackReader`.
+Within `Reader` we only deal with `PushbackReader` objects. The public method `read(InputStream istream)` just converts the `InputStream` to a `PushbackReader`.
 
 As you can see the `read` method is straightforward. It accumulates all Node values into a list while the end-of-file hasn't been reached then returns a TrufflerListNode when it's done. It's also responsible for reading and throwing away whitespace so `readNode` doesn't have to worry about it.
 
@@ -356,7 +361,7 @@ There's nothing special about checking for special forms. I just want to make su
 Eval
 ----
 
-All the nodes the reader returns extend from the abstract class `Node`. All `Node` does is define an abstract method `eval`. `eval` takes an `Environment` argumnet that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) `eval` returns the same object. Actually, Number and Boolean return the boxed values of `java.lang.Long` and `java.lang.Boolean`, respectively, because Java doesn't allow us to subclass `java.lang.Long` and `java.lang.Boolean`. If we could we would just returned `this` in those cases. The difference is subtle and doesn't really matter. For the `Function` type, we do return `this` since we define a custom type.
+All the nodes the reader returns extend from the abstract class `Node`. All `Node` does is define an abstract method `eval`. `eval` takes an `Environment` argumnet that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) `eval` returns the same object. Actually, Number and Boolean return the boxed values of `java.lang.Long` and `java.lang.Boolean`, respectively, because Java doesn't allow us to subclass `java.lang.Long` and `java.lang.Boolean`. If we could we would just return `this` in those cases. The difference is subtle and doesn't really matter. For the `Function` type, we do return `this` since we define a custom type.
 
 ```java
 public abstract class Node {
@@ -435,7 +440,7 @@ public class Environment {
 }
 ```
 
-`TrufflerListNode` is evaluated as a function call. This means the that all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to the `Function` class and its `apply` method is called with the rest of the list elements passed as arguments.
+`TrufflerListNode` is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to a `Function` and its `apply` method is called with the rest of the list elements passed as arguments.
 
 ```java
 public class TrufflerListNode extends Node implements Iterable<Node> {
@@ -443,29 +448,234 @@ public class TrufflerListNode extends Node implements Iterable<Node> {
 
     @Override
     public Object eval(Environment env) {
-        Fn fn = (Fn) this.car.eval(env);
+        Function function = (Function) this.car.eval(env);
 
         List<Object> args = new ArrayList<Object>();
         for (Node node : this.cdr) {
             args.add(node.eval(env));
         }
-        return fn.apply(args.toArray());
+        return function.apply(args.toArray());
     }
 }
 ```
 
-Builtin functions are subclasses of the `Function` class. User-defined functions are created with the lambda special form. The lambda special form creates an instantiation of an anonymous inner class that subclasses `Function`. These are the only two places that `Function` is implemented. If any other value is the first element of the list a `ClassCastException` is thrown.
+### Function invocation
 
-The top node's return value of `eval` is returned.
+This would be a good time to discuss what happens when user-defined functions (lambdas) are called. Remember that lambdas are really nothing more than a list of nodes so all we really need to do is evaluate the nodes in order then return the value of the final one. There are a couple of little twists. First, functions start a new namespace that have their outer function's namespace as their parent. Second, functions can have arguments so we'll need to put the arguments in the function's new namespace before we start evaluating the body lest we get incorrect unknown variable exceptions. Here's the `Function` instance that's returned when you use a lambda special form.
+
+```java
+new Function() {
+    @Override
+    public Object apply(Object... args) {
+        Environment lambdaEnv = new Environment(parentEnv);
+        if (args.length != formalParams.length()) {
+            throw new RuntimeException(
+                    "Wrong number of arguments. Expected: " +
+                            formalParams.length() + ". Got: " +
+                            args.length);
+        }
+
+        // Map parameter values to formal parameter names
+        int i = 0;
+        for (Node param : formalParams) {
+            SymbolNode paramSymbol = (SymbolNode) param;
+            lambdaEnv.putValue(paramSymbol.name, args[i]);
+            i++;
+        }
+
+        // Evaluate body
+        Object output = null;
+        for (Node node : body) {
+            output = node.eval(lambdaEnv);
+        }
+
+        return output;
+    }
+};
+```
+
+### Special form evaluation
+
+We've covered how Truffler's basic datatypes are evaluated; all that's left are the few special cases: `define`, `lambda`, `if` and `quote`. Remember, in the `Reader` when we encounter list forms that have these special symbols as their first element we replace the whole TrufflerListNode object with a new `SpecialForm`. This way, when we `eval` them, we can have whatever we want happen. For example, `define` takes the third element (a value) and stores it in the current namespace under the name given in the second element.
+
+```java
+private static class DefineSpecialForm extends SpecialForm {
+    public DefineSpecialForm(TrufflerListNode listNode) {
+        super(listNode);
+    }
+
+    @Override
+    public Object eval(Environment env) {
+        SymbolNode sym = (SymbolNode) this.node.cdr.car; // 2nd element
+        env.putValue(sym.name,
+                this.node.cdr.cdr.car.eval(env)); // 3rd element
+        return TrufflerListNode.EMPTY;
+    }
+}
+```
+
+I showed the return `Function` object for the `LambdaSpecialForm`. The rest of `LambdaSpecialForm` doesn't really do much beside getting references to the outer function's namespace and the formal parameters. Let's show the rest.
+
+```java
+private static class LambdaSpecialForm extends SpecialForm {
+     public LambdaSpecialForm(TrufflerListNode paramsAndBody) {
+         super(paramsAndBody);
+     }
+
+     @Override
+     public Object eval(final Environment parentEnv) {
+         final TrufflerListNode formalParams = (TrufflerListNode) this.node.cdr.car;
+         final TrufflerListNode body = this.node.cdr.cdr;
+         return new Function() { /* function definition goes here */ };
+     }
+ }
+```
+
+The other [`if`](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L63) and [`quote`](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L83) special forms do what you expect. If you're interested, you can check out the code.
+
+
+### Builtin Functions
+
+We're in the homestretch of the implementation. The only thing left is creating our builtin functions. Since we're defining the function entirely in Java we can skip things like mapping arguments and just get straight into evaluating. Most of our numerical functions can take variable arguments. For example, addition can take 0 or more arguments. With 0 arguments `0` is returned, with 1 argument the argument is returned and with more the sum of all arguments is returned.
+
+```java
+static final Function PLUS = new BuiltinFn("PLUS") {
+    @Override
+    public Object apply(Object... args) {
+        long sum = 0;
+        for (Object arg : args) {
+            sum += (Long) arg;
+        }
+        return sum;
+    }
+};
+```
+
+Subtraction requires at least one argument. With one argument it negates the argument, with more it continually subtracts from the first argument.
+
+```java
+static final Function MINUS = new BuiltinFn("MINUS") {
+    @Override
+    public Object apply(Object... args) {
+        if (args.length < 1) {
+            throw new RuntimeException(this.name + " requires an argument");
+        }
+        switch (args.length) {
+        case 1:
+            return -((Long) args[0]);
+        default:
+            long diff = (Long) args[0];
+            for (int i=1; i<args.length; i++) {
+                diff -= (Long) args[i];
+            }
+            return diff;
+        }
+    }
+};
+```
+
+You get the idea. You can see the implementation of the other builtin functions on [GitHub](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/env/BuiltinFn.java).
 
 
 Print
 -----
 
-This stage is pretty straightforward. Since `eval` always returns an Object (because we just call `System.out.println` on the returned value. Very simple.
+Rounding out the REPL, we print out the result. There's not much here. We just call `System.out.println` and that's that. Okay, there's one little catch. Since we use the empty list as Truffler's "null" value, we just don't print anything if that's what's returned in the REPL.
 
 
-Loop
-----
+Truffler in action
+==================
 
-We wrap the read-eval-print portions in a `while (true) {}` loop so we REPL continues indefinitely. If the user enters an EOF (ctrl+D) char we break out of the loop and exit.
+Now that we have a language spec and an implementation we can take it for a spin. We would start with Hello World, but we didn't imlement strings! We'll do the next best thing and use symbols.
+
+```scheme
+(println (quote hello-world!))
+; 'hello-world!
+```
+
+Close enough, and it works! Let's try something a little more involved. How about the good ol' fibonacci sequence.
+
+```scheme
+(define fibonacci
+  (lambda (n)
+    (if (< n 2)
+        1
+        (+ (fibonacci (- n 1))
+           (fibonacci (- n 2))))))
+
+(fib 10)
+; 55
+```
+Great! We get the correct answer. We have a working program! As you can see, Truffler would be easier to read if it had nice sugar like a function-define, but we can get by without it.
+
+
+Benchmarks
+==========
+
+With our working program what kind of performance do we get? More importantly, how does it compare to other languages that have had a lot of effort put into them to make them fast? Let's take our fibonacci example and see how it performs in Racket and Node.js. The results:
+
+        rkt
+        --------------
+        1346269
+        computation time: 15
+        total time: 117
+        
+        js
+        --------------
+        1346269
+        computation time: 16
+        total time: 82
+
+
+That's pretty fast. How does SimpleTruffler do?
+        
+        truffler
+        --------------
+        1346269
+        ('computation-time: 1502)
+        total time: 1644
+
+Ouch. Things aren't looking so hot for our little interpreter. It performs about 100x _slower_ than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleTruffler doesn't have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?
+
+        py
+        --------------
+        1346269
+        computation time: 385
+        total time: 400
+
+Better. SimpleTruffler is only 4x slower than CPython. Not bad for a language quicky thrown together. CPython is written in C and has a bytecode interpreter that helps explain why it's faster than our little language.
+
+I'll settle for fibonacci as a benchmark. Our terribly inefficient algorithm gives us plenty of avenues for improvement. We make a lot of function calls so if we improve that we should get a big speed up. Getting rid of boxed longs would really help.
+
+Algorithms > Interpreter
+---------------------------------------
+
+Out of curiosity, I converted the Truffler implementation to one that uses a much faster, linear algorithm.
+
+```scheme
+(define fibonacci
+  (lambda (n)
+    (define iter
+      (lambda (i n1 n2)
+        (if (= i 0)
+            n2
+            (iter (- i 1)
+                  n2
+                  (+ n1 n2)))))
+    (iter n 0 1)))
+```
+This version runs through the fibonacci numbers sequentially instead of blowing up exponentially. This is an example of [linear recursion](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1) vs [tree recursion](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2). You can read [SICP](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2) for more info on this. So how does our smarter algorithm perform:
+
+        truffler
+        --------------
+        1346269
+        ('computation-time: 8)
+        total time: 169
+
+Wow. Now that's an improvement. The algorithm chosen has much more to do with speed than the language implementation. In it's current state, SimpleTruffler could be "good enough" for many small tasks and give you reasonable speed. If you're writing a DSL to glue code written in other faster languages maybe a simple interpreter is all you need. But let's assume we're writing a general purpose language that needs faster function calls and numeric operations.
+
+
+Next Time
+=========
+
+We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we'll actually start looking at Truffle and begin migrating SimpleTruffler over to it. Maybe along the way we'll add some more benchmarks to get a better picture of our language's speed.
