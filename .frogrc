@@ -1,12 +1,12 @@
 # Required: Should NOT end in trailing slash.
-scheme/host = http://www.example.com
+scheme/host = http://cesquivias.github.io
 
 # The title of the blog. Used when generating feeds.
-title = My Awesome Blog
+title = Cristian Esquivias
 
 # The author. Used when generating feeds, and provided to
 # `page-template.html` as the template variable `@author`.
-author = The Unknown Author
+author = Cristian Esquivias
 
 # What editor to launch with --edit. $EDITOR means to use $EDITOR from
 # the environment

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <rss version="2.0">
  <channel>
-  <title>My Awesome Blog: Posts tagged 'foo'</title>
-  <description>My Awesome Blog: Posts tagged 'foo'</description>
-  <link>http://www.example.com/tags/foo.html</link>
+  <title>Cristian Esquivias: Posts tagged 'foo'</title>
+  <description>Cristian Esquivias: Posts tagged 'foo'</description>
+  <link>http://cesquivias.github.io/tags/foo.html</link>
   <lastBuildDate>Sun, 01 Jan 2012 00:00:00 PDT</lastBuildDate>
   <pubDate>Sun, 01 Jan 2012 00:00:00 PDT</pubDate>
   <ttl>1800</ttl>
   <item>
    <title>A 2012 blog post</title>
-   <link>http://www.example.com/blog/2012/01/01/a-2012-blog-post/?utm_source=foo&amp;utm_medium=RSS</link>
-   <guid>urn:http-www-example-com:-blog-2012-01-01-a-2012-blog-post</guid>
+   <link>http://cesquivias.github.io/blog/2012/01/01/a-2012-blog-post/?utm_source=foo&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2012-01-01-a-2012-blog-post</guid>
    <pubDate>Sun, 01 Jan 2012 00:00:00 PDT</pubDate>
    <description>&lt;html&gt;
 &lt;p&gt;Here is an example blog post.&lt;/p&gt;

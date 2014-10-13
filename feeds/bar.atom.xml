@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
- <title type="text">My Awesome Blog: Posts tagged 'bar'</title>
- <link rel="self" href="http://www.example.com/feeds/bar.atom.xml" />
- <link href="http://www.example.com/tags/bar.html" />
- <id>urn:http-www-example-com:-tags-bar-html</id>
+ <title type="text">Cristian Esquivias: Posts tagged 'bar'</title>
+ <link rel="self" href="http://cesquivias.github.io/feeds/bar.atom.xml" />
+ <link href="http://cesquivias.github.io/tags/bar.html" />
+ <id>urn:http-cesquivias-github-io:-tags-bar-html</id>
  <updated>2012-01-01T00:00:00Z</updated>
  <entry>
   <title type="text">A 2012 blog post</title>
-  <link rel="alternate" href="http://www.example.com/blog/2012/01/01/a-2012-blog-post/?utm_source=bar&amp;utm_medium=Atom" />
-  <id>urn:http-www-example-com:-blog-2012-01-01-a-2012-blog-post</id>
+  <link rel="alternate" href="http://cesquivias.github.io/blog/2012/01/01/a-2012-blog-post/?utm_source=bar&amp;utm_medium=Atom" />
+  <id>urn:http-cesquivias-github-io:-blog-2012-01-01-a-2012-blog-post</id>
   <published>2012-01-01T00:00:00Z</published>
   <updated>2012-01-01T00:00:00Z</updated>
   <author>
-   <name>The Unknown Author</name></author>
+   <name>Cristian Esquivias</name></author>
   <content type="html">&lt;html&gt;
 &lt;p&gt;Here is an example blog post.&lt;/p&gt;
 

@@ -1,9 +1,7 @@
     Title: Writing a Language in Truffle: Part 1
     Date: 2014-10-09T23:25:17
-    Tags: java truffle
+    Tags: java, truffle
 
-Intro
-=====
 
 Ever since implementing a [meta circular evaluator](https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html) in college I've enjoyed implementing little lisp interpreters in languages. It's one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to [a better python lisp interpreter](http://norvig.com/lispy.html). Nonetheless, it's a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.
 
@@ -12,6 +10,8 @@ Of course my toy interpreters are just that: a toy. Writing a lisp interpreter o
 Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. [PyPy](http://pypy.org/) has been around for a few years and has grown into such an environment. It originally started as a new Python interpreter written in a smaller, more restricted version of Python appropriately named RPython (R = restricted). You don't get all the syntactic goodness of regular Python but, it sure beats writing your interpreter in C. The developers have made herculean efforts to create a VM that can take a high level language like Python and make it fast even when written in a still high level language like RPython. It's so good it's [faster than the standard CPython](http://speed.pypy.org/) implementation in most benchmarks. It's such a promising platform there's an implementation of Ruby called [Topaz](http://topazruby.com/) that is already performing [faster in some benchmarks](http://mail.openjdk.java.net/pipermail/mlvm-dev/2013-February/005214.html) than the much more established implementations like JRuby. Exciting stuff, but now PyPy isn't the only game in town.
 
 Oracle labs has [released its own VM](http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html) that hopes to achieve the same results as PyPy but that leverages the huge ecosystem of the Java Virtual Machine (JVM). This modified JVM contains a new Just-In-Time (JIT) compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal's JIT-y goodness you use the Truffle library to annotate your interpreter and give Graal some hints on invariants and type information. For this integration effort you get significant speedups in your interpreter without having to resort to writing a bytecode compiler plus you have the full power of Java at your disposal.
+
+<!-- more -->
 
 The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google's V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it's existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizing compiler, *and* you get speeds that took other languages man-years (man-decades?) to achieve. Where do I sign up?
 

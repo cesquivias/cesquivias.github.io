@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <rss version="2.0">
  <channel>
-  <title>My Awesome Blog: Posts tagged 'java truffle'</title>
-  <description>My Awesome Blog: Posts tagged 'java truffle'</description>
-  <link>http://www.example.com/tags/java-truffle.html</link>
+  <title>Cristian Esquivias: Posts tagged 'java'</title>
+  <description>Cristian Esquivias: Posts tagged 'java'</description>
+  <link>http://cesquivias.github.io/tags/java.html</link>
   <lastBuildDate>Thu, 09 Oct 2014 23:25:17 PDT</lastBuildDate>
   <pubDate>Thu, 09 Oct 2014 23:25:17 PDT</pubDate>
   <ttl>1800</ttl>
   <item>
    <title>Writing a Language in Truffle: Part 1</title>
-   <link>http://www.example.com/blog/2014/10/09/writing-a-language-in-truffle-part-1/?utm_source=java-truffle&amp;utm_medium=RSS</link>
-   <guid>urn:http-www-example-com:-blog-2014-10-09-writing-a-language-in-truffle-part-1</guid>
+   <link>http://cesquivias.github.io/blog/2014/10/09/writing-a-language-in-truffle-part-1/?utm_source=java&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2014-10-09-writing-a-language-in-truffle-part-1</guid>
    <pubDate>Thu, 09 Oct 2014 23:25:17 PDT</pubDate>
    <description>&lt;html&gt;
-&lt;h1 id="intro"&gt;Intro&lt;/h1&gt;
-
 &lt;p&gt;Ever since implementing a &lt;a href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html"&gt;meta circular evaluator&lt;/a&gt; in college I&amp;rsquo;ve enjoyed implementing little lisp interpreters in languages. It&amp;rsquo;s one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to &lt;a href="http://norvig.com/lispy.html"&gt;a better python lisp interpreter&lt;/a&gt;. Nonetheless, it&amp;rsquo;s a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.&lt;/p&gt;
 
 &lt;p&gt;Of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; who wants to do that? If you want to target higher level virtual machines like the JVM you&amp;rsquo;re left with writing a compiler that takes your code and produces JVM bytecode. How about writing a compiler that targets Javascript? Another not-so-fun alternative.&lt;/p&gt;
@@ -22,6 +20,7 @@
 &lt;p&gt;Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. &lt;a href="http://pypy.org/"&gt;PyPy&lt;/a&gt; has been around for a few years and has grown into such an environment. It originally started as a new Python interpreter written in a smaller, more restricted version of Python appropriately named RPython (R = restricted). You don&amp;rsquo;t get all the syntactic goodness of regular Python but, it sure beats writing your interpreter in C. The developers have made herculean efforts to create a VM that can take a high level language like Python and make it fast even when written in a still high level language like RPython. It&amp;rsquo;s so good it&amp;rsquo;s &lt;a href="http://speed.pypy.org/"&gt;faster than the standard CPython&lt;/a&gt; implementation in most benchmarks. It&amp;rsquo;s such a promising platform there&amp;rsquo;s an implementation of Ruby called &lt;a href="http://topazruby.com/"&gt;Topaz&lt;/a&gt; that is already performing &lt;a href="http://mail.openjdk.java.net/pipermail/mlvm-dev/2013-February/005214.html"&gt;faster in some benchmarks&lt;/a&gt; than the much more established implementations like JRuby. Exciting stuff, but now PyPy isn&amp;rsquo;t the only game in town.&lt;/p&gt;
 
 &lt;p&gt;Oracle labs has &lt;a href="http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html"&gt;released its own VM&lt;/a&gt; that hopes to achieve the same results as PyPy but that leverages the huge ecosystem of the Java Virtual Machine (JVM). This modified JVM contains a new Just-In-Time (JIT) compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal&amp;rsquo;s JIT-y goodness you use the Truffle library to annotate your interpreter and give Graal some hints on invariants and type information. For this integration effort you get significant speedups in your interpreter without having to resort to writing a bytecode compiler plus you have the full power of Java at your disposal.&lt;/p&gt;
+&lt;!-- more--&gt;
 
 &lt;p&gt;The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google&amp;rsquo;s V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it&amp;rsquo;s existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizing compiler, &lt;em&gt;and&lt;/em&gt; you get speeds that took other languages man-years (man-decades?) to achieve. Where do I sign up?&lt;/p&gt;
 
@@ -51,7 +50,8 @@
  &lt;li&gt;
   &lt;p&gt;List (e.g., &lt;code&gt;(1 2 3)&lt;/code&gt;, &lt;code&gt;(a list of symbols)&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Lists are the only way to make compound structures in Truffler. It&amp;rsquo;s a little limiting but it&amp;rsquo;s plenty for our little language.&lt;/p&gt;
-  &lt;p&gt;Lists are implemented as singly-linked lists. There are pros and cons with this implementation, but it&amp;rsquo;s the traditional implementation in lisps. We&amp;rsquo;re not blazing any trails here with language design so we&amp;rsquo;ll stick with the tried and true implementation.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
+  &lt;p&gt;Lists are implemented as singly-linked lists. There are pros and cons with this implementation, but it&amp;rsquo;s the traditional implementation in lisps. We&amp;rsquo;re not blazing any trails here with language design so we&amp;rsquo;ll stick with the tried and true implementation.&lt;/p&gt;
+  &lt;p&gt;The empty list &lt;code&gt;()&lt;/code&gt; acts as Trufflers &lt;code&gt;null&lt;/code&gt; value.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
 
 &lt;h2 id="syntax"&gt;Syntax&lt;/h2&gt;
 
@@ -78,16 +78,16 @@
 
 &lt;ul&gt;
  &lt;li&gt;
-  &lt;p&gt;Number&lt;/p&gt;
+  &lt;p&gt;Number (e.g., &lt;code&gt;1&lt;/code&gt;, &lt;code&gt;4929&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Numbers evaluate to themselves. That is, a number returns a number. Shocking, I know.&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
-  &lt;p&gt;Boolean&lt;/p&gt;
+  &lt;p&gt;Boolean (e.g., &lt;code&gt;#f&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Booleans evaluate to themselves. Same as above.&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
-  &lt;p&gt;Symbol&lt;/p&gt;
+  &lt;p&gt;Symbol (e.g, &lt;code&gt;a-variable&lt;/code&gt;, &lt;code&gt;a-variable-that-contains-a-function&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Symbols evaluate by returning looking the current namespace and return the value with the same name as the symbol. When you say &lt;code&gt;some-variable&lt;/code&gt; the interpreter will see a symbol and try to evaluate it by looking in the current namespace for something stored under &lt;code&gt;"some-variable"&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
-  &lt;p&gt;List&lt;/p&gt;
+  &lt;p&gt;List (e.g., &lt;code&gt;(+ 1 2 3)&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Lists are evaluated as function calls. Every element in the list is evaluated before the function is applied to its arguments. The first element must evaluate to a function. The rest of the elements are the arguments. The arguments are mapped to the formal parameter names before the body of the function is called. The last expression in the function body is the return value.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
 
 &lt;h2 id="scoping"&gt;Scoping&lt;/h2&gt;
@@ -98,13 +98,13 @@
 
 &lt;h2 id="special-forms"&gt;Special Forms&lt;/h2&gt;
 
-&lt;p&gt;The evaluation process for function calls of evaluating all the arguments doesn&amp;rsquo;t work in certain circumstances. In these cases we&amp;rsquo;ve defined unique evaluation schemes typically called special forms.&lt;/p&gt;
+&lt;p&gt;The evaluation process for function calls is defined to evaluate all the arguments, but we don&amp;rsquo;t want this in certain circumstances. In these cases we&amp;rsquo;ve defined unique evaluation schemes called special forms.&lt;/p&gt;
 
 &lt;ul&gt;
  &lt;li&gt;
   &lt;p&gt;&lt;code&gt;define&lt;/code&gt;&lt;/p&gt;
   &lt;p&gt;This creates a new variable within the current scope. &lt;code&gt;define&lt;/code&gt; has to be a special form because the variable name doesn&amp;rsquo;t exist yet (which is why we&amp;rsquo;re calling &lt;code&gt;define&lt;/code&gt;) and would throw an error for an undefined variable.&lt;/p&gt;
-  &lt;p&gt;Example: &lt;code&gt;(define new-var 42)&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+  &lt;p&gt;Example: &lt;code&gt;(define c 299792458)&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
   &lt;p&gt;&lt;code&gt;lambda&lt;/code&gt;&lt;/p&gt;
   &lt;p&gt;This creates an anonymous function. The second element (the first being the symbol &lt;code&gt;lambda&lt;/code&gt;) is the list of formal parameters. Lambda will be used with &lt;code&gt;define&lt;/code&gt; to store a function with a name. &lt;code&gt;lambda&lt;/code&gt; has to be a special form because we don&amp;rsquo;t want to evaluate the body immediately; only when the function is the first element in a function call. Also, the arguments need to be mapped to the parameter names before the body can be evaluated or else we would get undefined variable errors.&lt;/p&gt;
@@ -112,20 +112,21 @@
   &lt;p&gt;Example: &lt;code&gt;(lambda (x) (* x x))&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
   &lt;p&gt;&lt;code&gt;if&lt;/code&gt;&lt;/p&gt;
-  &lt;p&gt;The only control flow structure in Truffle. This works as you&amp;rsquo;d expect, the second element (the test expression) is evaluated, and if it&amp;rsquo;s true the 3rd element (the &amp;ldquo;then&amp;rdquo; expression) is evaluated. If it&amp;rsquo;s false the 4th element is evaluated. &lt;code&gt;if&lt;/code&gt; has to be a special form because only the then or the else expression must be evaluated. If &lt;code&gt;if&lt;/code&gt; was a normal function both clauses would be evaluated, and that would be bad.&lt;/p&gt;
-  &lt;p&gt;Remember, &lt;code&gt;if&lt;/code&gt; is an expression like everything else. It returns the result of evaluation of either the then or else expression. Lisp ifs are more like the C-style ternary operator: &lt;code&gt;test() ? then_result() : else_result&lt;/code&gt;.&lt;/p&gt;
+  &lt;p&gt;The only control flow structure in Truffle. This works as you&amp;rsquo;d expect, the second element (the test expression) is evaluated, and if it&amp;rsquo;s true the 3rd element (the &amp;ldquo;then&amp;rdquo; expression) is evaluated. If it&amp;rsquo;s false the 4th element is evaluated. &lt;code&gt;if&lt;/code&gt; has to be a special form because only the then or the else expression must be evaluated. If &lt;code&gt;if&lt;/code&gt; was a normal function both clauses would be evaluated, the else expression would always return, and that would be bad.&lt;/p&gt;
+  &lt;p&gt;Remember, &lt;code&gt;if&lt;/code&gt; is an expression like everything else. It returns the result of evaluation of either the then or else expression. Lisp ifs are more like the C-style ternary operator: &lt;code&gt;test() ? then_result() : else_result()&lt;/code&gt;.&lt;/p&gt;
   &lt;p&gt;Example: &lt;code&gt;(if (= x 0) (+ x 1) (- x 3))&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
   &lt;p&gt;&lt;code&gt;quote&lt;/code&gt;&lt;/p&gt;
-  &lt;p&gt;This returns the argument with evaluation. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. &lt;code&gt;quote&lt;/code&gt; allows us to do that. With lists you can use the &lt;code&gt;list&lt;/code&gt; builtin function to get a list object, but symbols needs quote because there&amp;rsquo;s no other way to get a Symbol object.&lt;/p&gt;
-  &lt;p&gt;Keep in mind, quote doesn&amp;rsquo;t evaluate anything in its argument. That means if you pass a list it&amp;rsquo;s elements are not evaluated. A symbol within an list will stay a simple. You&amp;rsquo;re better off using the &lt;code&gt;list&lt;/code&gt; function unless you really want a list of symbols.&lt;/p&gt;
-  &lt;p&gt;Because numbers and booleans evaluate to themselves, quoting them doesn&amp;rsquo;t do anything.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
+  &lt;p&gt;This returns the argument without evaluating it. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. &lt;code&gt;quote&lt;/code&gt; allows us to do that. With lists you can use the &lt;code&gt;list&lt;/code&gt; builtin function to get a list object, but symbols need &lt;code&gt;quote&lt;/code&gt; because there&amp;rsquo;s no other way to get a Symbol object.&lt;/p&gt;
+  &lt;p&gt;Keep in mind, quote doesn&amp;rsquo;t evaluate anything in its argument. That means if you pass a list it&amp;rsquo;s elements are not evaluated. A symbol within a list will stay a symbol. You&amp;rsquo;re better off using the &lt;code&gt;list&lt;/code&gt; function unless you really want a list of symbols.&lt;/p&gt;
+  &lt;p&gt;Because numbers and booleans evaluate to themselves, quoting them doesn&amp;rsquo;t do anything.&lt;/p&gt;
+  &lt;p&gt;Example: &lt;code&gt;(quote (a list of undefined symbols))&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
 
 &lt;p&gt;With these few special forms we have a fully functional, Turing-complete programming language. We&amp;rsquo;ll have to be creative in combining them to get the functionality we need, but that&amp;rsquo;s part of the power of lisp.&lt;/p&gt;
 
 &lt;h2 id="builtin-functions"&gt;Builtin Functions&lt;/h2&gt;
 
-&lt;p&gt;Although we have a Turing-complete language that isn&amp;rsquo;t much comfort if we can&amp;rsquo;t do something useful with it like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There&amp;rsquo;s nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.&lt;/p&gt;
+&lt;p&gt;Although we have a Turing-complete language it isn&amp;rsquo;t very useful if we can&amp;rsquo;t do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There&amp;rsquo;s nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.&lt;/p&gt;
 
 &lt;ul&gt;
  &lt;li&gt;
@@ -135,10 +136,10 @@
   &lt;p&gt;List functions (&lt;code&gt;list&lt;/code&gt;, &lt;code&gt;cons&lt;/code&gt;, &lt;code&gt;car&lt;/code&gt;, &lt;code&gt;cdr&lt;/code&gt;)&lt;/p&gt;
   &lt;p&gt;Our basic functions for creating, prepending and splicing lists. The names &lt;code&gt;cons&lt;/code&gt;, &lt;code&gt;car&lt;/code&gt;, &lt;code&gt;cdr&lt;/code&gt; probably don&amp;rsquo;t make sense if you&amp;rsquo;re unfamiliar with lisp but they basically mean &lt;code&gt;prepend&lt;/code&gt;, &lt;code&gt;first&lt;/code&gt;, &lt;code&gt;rest&lt;/code&gt; respectively. Again, we&amp;rsquo;re sticking with lisp tradition here. For more background, you can read the Wikpedia article on &lt;a href="http://en.wikipedia.org/wiki/Cons"&gt;cons&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
-  &lt;p&gt;IO functions (&lt;code&gt;println&lt;/code&gt;)&lt;/p&gt;
-  &lt;p&gt;Since we&amp;rsquo;re not planning to do any real work in Truffler, we&amp;rsquo;ll just implement a function to send data to standard out and call it a day.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
+  &lt;p&gt;IO functions (&lt;code&gt;println&lt;/code&gt;, &lt;code&gt;now&lt;/code&gt;)&lt;/p&gt;
+  &lt;p&gt;Since we&amp;rsquo;re not planning to do any real work in Truffler, we&amp;rsquo;ll just implement a function to send data to standard out and get a current timestamp.&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;
 
-&lt;p&gt;I may have to add more in the future but this is a good start.&lt;/p&gt;
+&lt;p&gt;I may have to add more functions in the future but this is a good start.&lt;/p&gt;
 
 &lt;h1 id="simpletruffler"&gt;SimpleTruffler&lt;/h1&gt;
 
@@ -148,9 +149,9 @@
 
 &lt;p&gt;The architecture will be a simple pipline from program text to evaluated result.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;    Read program text -&amp;gt; evaluate AST&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;    Read program text and return tree of expressions -&amp;gt; evaluate tree&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;The &lt;code&gt;Reader&lt;/code&gt; class will encapsulate converting from program text and return the AST. The AST top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the evaluation will be dropped.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;Reader&lt;/code&gt; class will encapsulate converting from program text and return the tree of Truffler expressions. The abstract syntax tree&amp;rsquo;s (AST&amp;rsquo;s) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.&lt;/p&gt;
 
 &lt;p&gt;Our main class will look like:&lt;/p&gt;
 
@@ -186,7 +187,7 @@
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;runTruffler&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="n"&gt;Environment&lt;/span&gt; &lt;span class="n"&gt;topEnv&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Environment&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getBaseEnvironment&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
-        &lt;span class="n"&gt;TrufflerList&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;FileInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+        &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;FileInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
             &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;eval&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;topEnv&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="o"&gt;}&lt;/span&gt;
@@ -198,7 +199,7 @@
 
 &lt;h2 id="repl"&gt;REPL&lt;/h2&gt;
 
-&lt;p&gt;We can add a small addition at basically no cost. We can take the basic flow described above and wrap it in a &lt;code&gt;while&lt;/code&gt; loop and create a REPL. If you&amp;rsquo;ve ever used languages like Python, Ruby or the Javascript console in web browsers you know a REPL. The REPL takes the text passed to it by the user and follows the flow above but then prints out the result instead of dropping it. We wrap it all in a &lt;code&gt;while&lt;/code&gt; loop so we always return back to the prompt.&lt;/p&gt;
+&lt;p&gt;We can make a small addition at essentially no cost. We can take the basic flow described above and wrap it in a &lt;code&gt;while&lt;/code&gt; loop and create a &lt;a href="http://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop"&gt;REPL&lt;/a&gt;. If you&amp;rsquo;ve ever used languages like Python, Ruby or the Javascript console in web browsers you know a REPL. The REPL takes the text passed to it by the user and follows the flow above but then prints out the result instead of dropping it. We wrap it all in a &lt;code&gt;while&lt;/code&gt; loop so we always return back to the prompt.&lt;/p&gt;
 
 &lt;p&gt;Our updated main class is:&lt;/p&gt;
 
@@ -277,7 +278,7 @@
                 &lt;span class="c1"&gt;// EOF sent&lt;/span&gt;
                 &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
             &lt;span class="o"&gt;}&lt;/span&gt;
-            &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+            &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
                     &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;ByteArrayInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getBytes&lt;/span&gt;&lt;span class="o"&gt;()));&lt;/span&gt;
 
             &lt;span class="c1"&gt;// EVAL&lt;/span&gt;
@@ -296,7 +297,7 @@
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;runTruffler&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="n"&gt;Environment&lt;/span&gt; &lt;span class="n"&gt;topEnv&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Environment&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getBaseEnvironment&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
-        &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;FileInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+        &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Reader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;FileInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;nodes&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
             &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;eval&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;topEnv&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="o"&gt;}&lt;/span&gt;
@@ -306,13 +307,13 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;We&amp;rsquo;re being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an &lt;code&gt;InputStream&lt;/code&gt; into an abstract syntax tree.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;re being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an &lt;code&gt;InputStream&lt;/code&gt; into a tree of Truffler expressions.&lt;/p&gt;
 
 &lt;h2 id="reading"&gt;Reading&lt;/h2&gt;
 
-&lt;p&gt;We still need to convert out program text into an in-memory tree of expressions. Typically, languages break this up into two stages: lexing (text -&amp;gt; tokens), parsing (tokens -&amp;gt; syntax tree). I&amp;rsquo;m going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.&lt;/p&gt;
+&lt;p&gt;Typically, languages break this up into two stages: lexing (text -&amp;gt; tokens), parsing (tokens -&amp;gt; syntax tree). I&amp;rsquo;m going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.&lt;/p&gt;
 
-&lt;p&gt;The basic flow of the reader is to read one character then dispatch to specialized readers depending on the character read. Our &lt;code&gt;readNode&lt;/code&gt; function:&lt;/p&gt;
+&lt;p&gt;The basic flow of the reader is to read one character then dispatch to specialized read methods depending on the character read. Our &lt;code&gt;readNode&lt;/code&gt; function:&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -355,8 +356,6 @@
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
-
-&lt;p&gt;I call &lt;code&gt;unread&lt;/code&gt; to push the read character back onto the stream so it token can be completely read by the called method. I always push it back on to be consistent. Nodes like lists and booleans don&amp;rsquo;t technically need it. If you look at the &lt;a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/Reader.java#L76"&gt;list&lt;/a&gt; and &lt;a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/Reader.java#L114"&gt;boolean&lt;/a&gt; implementations you can see the only thing we do is assert the first character is what we expected.&lt;/p&gt;
 
 &lt;p&gt;If you look closely at our implementation of SimpleTrufflerMain you&amp;rsquo;ll see that we call &lt;code&gt;Reader.read&lt;/code&gt; and it returns a TrufflerListNode. Our &lt;code&gt;read&lt;/code&gt; method can read multiple nodes at once and return them all. The &lt;code&gt;read&lt;/code&gt; method:&lt;/p&gt;
 
@@ -410,7 +409,7 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;Within &lt;code&gt;Reader&lt;/code&gt; we only deal with &lt;code&gt;PushbackReader&lt;/code&gt; objects. The only public method &lt;code&gt;read(InputStream istream)&lt;/code&gt; just converts the &lt;code&gt;InputStream&lt;/code&gt; to a &lt;code&gt;PushbackReader&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Within &lt;code&gt;Reader&lt;/code&gt; we only deal with &lt;code&gt;PushbackReader&lt;/code&gt; objects. The public method &lt;code&gt;read(InputStream istream)&lt;/code&gt; just converts the &lt;code&gt;InputStream&lt;/code&gt; to a &lt;code&gt;PushbackReader&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;As you can see the &lt;code&gt;read&lt;/code&gt; method is straightforward. It accumulates all Node values into a list while the end-of-file hasn&amp;rsquo;t been reached then returns a TrufflerListNode when it&amp;rsquo;s done. It&amp;rsquo;s also responsible for reading and throwing away whitespace so &lt;code&gt;readNode&lt;/code&gt; doesn&amp;rsquo;t have to worry about it.&lt;/p&gt;
 
@@ -524,7 +523,7 @@
 
 &lt;h2 id="eval"&gt;Eval&lt;/h2&gt;
 
-&lt;p&gt;All the nodes the reader returns extend from the abstract class &lt;code&gt;Node&lt;/code&gt;. All &lt;code&gt;Node&lt;/code&gt; does is define an abstract method &lt;code&gt;eval&lt;/code&gt;. &lt;code&gt;eval&lt;/code&gt; takes an &lt;code&gt;Environment&lt;/code&gt; argumnet that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) &lt;code&gt;eval&lt;/code&gt; returns the same object. Actually, Number and Boolean return the boxed values of &lt;code&gt;java.lang.Long&lt;/code&gt; and &lt;code&gt;java.lang.Boolean&lt;/code&gt;, respectively, because Java doesn&amp;rsquo;t allow us to subclass &lt;code&gt;java.lang.Long&lt;/code&gt; and &lt;code&gt;java.lang.Boolean&lt;/code&gt;. If we could we would just returned &lt;code&gt;this&lt;/code&gt; in those cases. The difference is subtle and doesn&amp;rsquo;t really matter. For the &lt;code&gt;Function&lt;/code&gt; type, we do return &lt;code&gt;this&lt;/code&gt; since we define a custom type.&lt;/p&gt;
+&lt;p&gt;All the nodes the reader returns extend from the abstract class &lt;code&gt;Node&lt;/code&gt;. All &lt;code&gt;Node&lt;/code&gt; does is define an abstract method &lt;code&gt;eval&lt;/code&gt;. &lt;code&gt;eval&lt;/code&gt; takes an &lt;code&gt;Environment&lt;/code&gt; argumnet that contains the namespace for all the defined variables. For most datatypes (Number, Boolean, Function) &lt;code&gt;eval&lt;/code&gt; returns the same object. Actually, Number and Boolean return the boxed values of &lt;code&gt;java.lang.Long&lt;/code&gt; and &lt;code&gt;java.lang.Boolean&lt;/code&gt;, respectively, because Java doesn&amp;rsquo;t allow us to subclass &lt;code&gt;java.lang.Long&lt;/code&gt; and &lt;code&gt;java.lang.Boolean&lt;/code&gt;. If we could we would just return &lt;code&gt;this&lt;/code&gt; in those cases. The difference is subtle and doesn&amp;rsquo;t really matter. For the &lt;code&gt;Function&lt;/code&gt; type, we do return &lt;code&gt;this&lt;/code&gt; since we define a custom type.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -690,7 +689,7 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;&lt;code&gt;TrufflerListNode&lt;/code&gt; is evaluated as a function call. This means the that all elements of the list are first evaluated by calling their respective &lt;code&gt;eval&lt;/code&gt; methods. The first element is then cast to the &lt;code&gt;Function&lt;/code&gt; class and its &lt;code&gt;apply&lt;/code&gt; method is called with the rest of the list elements passed as arguments.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;TrufflerListNode&lt;/code&gt; is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective &lt;code&gt;eval&lt;/code&gt; methods. The first element is then cast to a &lt;code&gt;Function&lt;/code&gt; and its &lt;code&gt;apply&lt;/code&gt; method is called with the rest of the list elements passed as arguments.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -806,7 +805,7 @@
 
 &lt;h3 id="special-form-evaluation"&gt;Special form evaluation&lt;/h3&gt;
 
-&lt;p&gt;We&amp;rsquo;ve covered how Truffler&amp;rsquo;s basic datatypes are evaluated; all that&amp;rsquo;s left are the few special cases: &lt;code&gt;define&lt;/code&gt;, &lt;code&gt;lambda&lt;/code&gt;, &lt;code&gt;if&lt;/code&gt; and &lt;code&gt;quote&lt;/code&gt;. Remember, in the &lt;code&gt;Reader&lt;/code&gt; when we encounter list forms that have these special symbols as their element we replace whole TrufflerListNode object with a new object. This way, when we &lt;code&gt;eval&lt;/code&gt; them, we can have whatever we want happen. For example, &lt;code&gt;define&lt;/code&gt; takes the third element (a value) and stores it in the current namespace under the name given in the second element.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;ve covered how Truffler&amp;rsquo;s basic datatypes are evaluated; all that&amp;rsquo;s left are the few special cases: &lt;code&gt;define&lt;/code&gt;, &lt;code&gt;lambda&lt;/code&gt;, &lt;code&gt;if&lt;/code&gt; and &lt;code&gt;quote&lt;/code&gt;. Remember, in the &lt;code&gt;Reader&lt;/code&gt; when we encounter list forms that have these special symbols as their first element we replace the whole TrufflerListNode object with a new &lt;code&gt;SpecialForm&lt;/code&gt;. This way, when we &lt;code&gt;eval&lt;/code&gt; them, we can have whatever we want happen. For example, &lt;code&gt;define&lt;/code&gt; takes the third element (a value) and stores it in the current namespace under the name given in the second element.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -839,7 +838,7 @@
         &lt;span class="n"&gt;SymbolNode&lt;/span&gt; &lt;span class="n"&gt;sym&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;SymbolNode&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;node&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;cdr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;car&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 2nd element&lt;/span&gt;
         &lt;span class="n"&gt;env&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;putValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sym&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
                 &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;node&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;cdr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;cdr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;car&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;eval&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;env&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="c1"&gt;// 3rd element&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;TrufflerListNode&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;EMPTY&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -869,8 +868,8 @@
     &lt;td class="code"&gt;
      &lt;div class="source"&gt;
       &lt;pre&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;LambdaSpecialForm&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;SpecialForm&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;LambdaSpecialForm&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;TrufflerListNode&lt;/span&gt; &lt;span class="n"&gt;listNode&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-         &lt;span class="kd"&gt;super&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;listNode&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;LambdaSpecialForm&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;TrufflerListNode&lt;/span&gt; &lt;span class="n"&gt;paramsAndBody&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+         &lt;span class="kd"&gt;super&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;paramsAndBody&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
      &lt;span class="o"&gt;}&lt;/span&gt;
 
      &lt;span class="nd"&gt;@Override&lt;/span&gt;
@@ -884,11 +883,11 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;The other &lt;code&gt;if&lt;/code&gt; and &lt;code&gt;quote&lt;/code&gt; special forms do what you expect. If you&amp;rsquo;re interested, you can check out the code.&lt;/p&gt;
+&lt;p&gt;The other &lt;a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L63"&gt;&lt;code&gt;if&lt;/code&gt;&lt;/a&gt; and &lt;a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L83"&gt;&lt;code&gt;quote&lt;/code&gt;&lt;/a&gt; special forms do what you expect. If you&amp;rsquo;re interested, you can check out the code.&lt;/p&gt;
 
 &lt;h3 id="builtin-functions"&gt;Builtin Functions&lt;/h3&gt;
 
-&lt;p&gt;We&amp;rsquo;re in the homestretch of the implementation. The only thing left is creating our builtin functions. Since we&amp;rsquo;re defining the function entirely in Java we can skip things like mapping arguments and just get straight into evaluation. Most of our numerical functions can take variable arguments. For example, addition can take 0 or more arguments. With 0 arguments &lt;code&gt;0&lt;/code&gt; is returned, with 1 argument the argument is returns and with more the sum of all arguments is returned.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;re in the homestretch of the implementation. The only thing left is creating our builtin functions. Since we&amp;rsquo;re defining the function entirely in Java we can skip things like mapping arguments and just get straight into evaluating. Most of our numerical functions can take variable arguments. For example, addition can take 0 or more arguments. With 0 arguments &lt;code&gt;0&lt;/code&gt; is returned, with 1 argument the argument is returned and with more the sum of all arguments is returned.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -1030,7 +1029,7 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;Great! We get the correct answer. We have a working program! As you can see, Truffler would be easier to read if it had nice sugar like a function-define, but we can get by without them.&lt;/p&gt;
+&lt;p&gt;Great! We get the correct answer. We have a working program! As you can see, Truffler would be easier to read if it had nice sugar like a function-define, but we can get by without it.&lt;/p&gt;
 
 &lt;h1 id="benchmarks"&gt;Benchmarks&lt;/h1&gt;
 
@@ -1056,7 +1055,7 @@
     ('computation-time: 1502)
     total time: 1644&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Things aren&amp;rsquo;t looking so hot for our little interpreter. It performs about 100x &lt;em&gt;slower&lt;/em&gt; than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleTruffler doesn&amp;rsquo;t have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?&lt;/p&gt;
+&lt;p&gt;Ouch. Things aren&amp;rsquo;t looking so hot for our little interpreter. It performs about 100x &lt;em&gt;slower&lt;/em&gt; than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleTruffler doesn&amp;rsquo;t have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;    py
     --------------
@@ -1068,7 +1067,7 @@
 
 &lt;p&gt;I&amp;rsquo;ll settle for fibonacci as a benchmark. Our terribly inefficient algorithm gives us plenty of avenues for improvement. We make a lot of function calls so if we improve that we should get a big speed up. Getting rid of boxed longs would really help.&lt;/p&gt;
 
-&lt;h2 id="better-algorithms--better-interpreters"&gt;Better algorithms &amp;gt; better interpreters&lt;/h2&gt;
+&lt;h2 id="algorithms--interpreter"&gt;Algorithms &amp;gt; Interpreter&lt;/h2&gt;
 
 &lt;p&gt;Out of curiosity, I converted the Truffler implementation to one that uses a much faster, linear algorithm.&lt;/p&gt;
 
@@ -1104,7 +1103,7 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;This version runs through the number sequentially instead of blowing up exponentially. This is an example of &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1"&gt;linear recursion&lt;/a&gt; vs &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2"&gt;tree recursion&lt;/a&gt;. You can read &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2"&gt;SICP&lt;/a&gt; for more info on this. So how does our smarter algorithm perform:&lt;/p&gt;
+&lt;p&gt;This version runs through the fibonacci numbers sequentially instead of blowing up exponentially. This is an example of &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1"&gt;linear recursion&lt;/a&gt; vs &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2"&gt;tree recursion&lt;/a&gt;. You can read &lt;a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2"&gt;SICP&lt;/a&gt; for more info on this. So how does our smarter algorithm perform:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;    truffler
     --------------
