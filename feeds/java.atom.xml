@@ -6,9 +6,9 @@
  <id>urn:http-cesquivias-github-io:-tags-java-html</id>
  <updated>2014-10-13T23:25:17Z</updated>
  <entry>
-  <title type="text">Writing a Language in Truffle: Part 1</title>
-  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=java&amp;utm_medium=Atom" />
-  <id>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</id>
+  <title type="text">Writing a Language in Truffle. Part 1: A Simple, Slow Interpreter</title>
+  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/?utm_source=java&amp;utm_medium=Atom" />
+  <id>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1-a-simple-slow-interpreter</id>
   <published>2014-10-13T23:25:17Z</published>
   <updated>2014-10-13T23:25:17Z</updated>
   <author>

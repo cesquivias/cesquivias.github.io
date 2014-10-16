@@ -1,4 +1,4 @@
-    Title: Writing a Language in Truffle: Part 1
+    Title: Writing a Language in Truffle. Part 1: A Simple, Slow Interpreter
     Date: 2014-10-13T23:25:17
     Tags: java, truffle, tutorial
 

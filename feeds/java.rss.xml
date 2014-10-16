@@ -8,9 +8,9 @@
   <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
   <ttl>1800</ttl>
   <item>
-   <title>Writing a Language in Truffle: Part 1</title>
-   <link>http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=java&amp;utm_medium=RSS</link>
-   <guid>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</guid>
+   <title>Writing a Language in Truffle. Part 1: A Simple, Slow Interpreter</title>
+   <link>http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/?utm_source=java&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1-a-simple-slow-interpreter</guid>
    <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
    <description>&lt;html&gt;
 &lt;p class="subtitle"&gt;How hard is it to write a simple, fast interpreter? Let's find out.&lt;/p&gt;

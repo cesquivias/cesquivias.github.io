@@ -1,2 +1,2 @@
-http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/
+http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/
 http://cesquivias.github.io/About.html
