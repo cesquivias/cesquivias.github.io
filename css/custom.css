@@ -16,6 +16,11 @@ article header h2 a {
     color: #333;
 }
 
+a code {
+    text-decoration: underline;
+    color: #4582EC;
+}
+
 p.subtitle {
     font-size: 110%;
     font-style: italic;
