@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
- <title type="text">Cristian Esquivias: Posts tagged 'truffle'</title>
- <link rel="self" href="http://cesquivias.github.io/feeds/truffle.atom.xml" />
- <link href="http://cesquivias.github.io/tags/truffle.html" />
- <id>urn:http-cesquivias-github-io:-tags-truffle-html</id>
+ <title type="text">Cristian Esquivias: Posts tagged 'tutorial'</title>
+ <link rel="self" href="http://cesquivias.github.io/feeds/tutorial.atom.xml" />
+ <link href="http://cesquivias.github.io/tags/tutorial.html" />
+ <id>urn:http-cesquivias-github-io:-tags-tutorial-html</id>
  <updated>2014-10-13T23:25:17Z</updated>
  <entry>
   <title type="text">Writing a Language in Truffle: Part 1</title>
-  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=truffle&amp;utm_medium=Atom" />
+  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=tutorial&amp;utm_medium=Atom" />
   <id>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</id>
   <published>2014-10-13T23:25:17Z</published>
   <updated>2014-10-13T23:25:17Z</updated>

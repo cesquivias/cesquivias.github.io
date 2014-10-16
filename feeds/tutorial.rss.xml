@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?> 
-<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
- <title type="text">Cristian Esquivias: Posts tagged 'truffle'</title>
- <link rel="self" href="http://cesquivias.github.io/feeds/truffle.atom.xml" />
- <link href="http://cesquivias.github.io/tags/truffle.html" />
- <id>urn:http-cesquivias-github-io:-tags-truffle-html</id>
- <updated>2014-10-13T23:25:17Z</updated>
- <entry>
-  <title type="text">Writing a Language in Truffle: Part 1</title>
-  <link rel="alternate" href="http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=truffle&amp;utm_medium=Atom" />
-  <id>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</id>
-  <published>2014-10-13T23:25:17Z</published>
-  <updated>2014-10-13T23:25:17Z</updated>
-  <author>
-   <name>Cristian Esquivias</name></author>
-  <content type="html">&lt;html&gt;
+<rss version="2.0">
+ <channel>
+  <title>Cristian Esquivias: Posts tagged 'tutorial'</title>
+  <description>Cristian Esquivias: Posts tagged 'tutorial'</description>
+  <link>http://cesquivias.github.io/tags/tutorial.html</link>
+  <lastBuildDate>Mon, 13 Oct 2014 23:25:17 PDT</lastBuildDate>
+  <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
+  <ttl>1800</ttl>
+  <item>
+   <title>Writing a Language in Truffle: Part 1</title>
+   <link>http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1/?utm_source=tutorial&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1</guid>
+   <pubDate>Mon, 13 Oct 2014 23:25:17 PDT</pubDate>
+   <description>&lt;html&gt;
 &lt;p class="subtitle"&gt;How hard is it to write a simple, fast interpreter? Let's find out.&lt;/p&gt;
 
 &lt;p&gt;It&amp;rsquo;s fun writing little language interpreters in Python. You can get a fully functional interpreter in about an hour but of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; who wants to do that? If you want to target higher level virtual machines like the JVM you&amp;rsquo;re left with writing a compiler that takes your code and produces JVM bytecode. How about writing a compiler that targets Javascript? Another not-so-fun alternative.&lt;/p&gt;
@@ -1116,4 +1115,4 @@
 
 &lt;h1 id="next-time"&gt;Next Time&lt;/h1&gt;
 
-&lt;p&gt;We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we&amp;rsquo;ll actually start looking at Truffle and begin migrating SimpleMumbler over to it. Maybe along the way we&amp;rsquo;ll add some more benchmarks to get a better picture of our language&amp;rsquo;s speed.&lt;/p&gt;&lt;/html&gt;</content></entry></feed>
+&lt;p&gt;We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we&amp;rsquo;ll actually start looking at Truffle and begin migrating SimpleMumbler over to it. Maybe along the way we&amp;rsquo;ll add some more benchmarks to get a better picture of our language&amp;rsquo;s speed.&lt;/p&gt;&lt;/html&gt;</description></item></channel></rss>
