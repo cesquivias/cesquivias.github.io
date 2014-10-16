@@ -16,6 +16,12 @@ article header h2 a {
     color: #333;
 }
 
+p.subtitle {
+    font-size: 110%;
+    font-style: italic;
+    margin-bottom: 30px;
+}
+
 #content {
     width: 70%;
     margin: 0 auto;

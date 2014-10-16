@@ -91,6 +91,8 @@
 <time datetime="2014-10-13" pubdate="true">2014-10-13</time> :: <span class="tags"><a href="/tags/java.html">java</a>, <a href="/tags/truffle.html">truffle</a></span></p>
   </header>
 
+<p class="subtitle">How hard is it to write a simple, fast interpreter? Let's find out.</p>
+
 <p>Ever since implementing a <a href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html">meta circular evaluator</a> in college I&rsquo;ve enjoyed implementing little lisp interpreters in languages. It&rsquo;s one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to <a href="http://norvig.com/lispy.html">a better python lisp interpreter</a>. Nonetheless, it&rsquo;s a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.</p>
 
 <p>Of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; who wants to do that? If you want to target higher level virtual machines like the JVM you&rsquo;re left with writing a compiler that takes your code and produces JVM bytecode. How about writing a compiler that targets Javascript? Another not-so-fun alternative.</p>

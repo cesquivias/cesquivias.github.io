@@ -2,6 +2,7 @@
     Date: 2014-10-13T23:25:17
     Tags: java, truffle
 
+<p class="subtitle">How hard is it to write a simple, fast interpreter? Let's find out.</p>
 
 Ever since implementing a [meta circular evaluator](https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html) in college I've enjoyed implementing little lisp interpreters in languages. It's one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to [a better python lisp interpreter](http://norvig.com/lispy.html). Nonetheless, it's a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.
 
@@ -15,21 +16,21 @@ Oracle labs has [released its own VM](http://www.oracle.com/technetwork/oracle-l
 
 The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google's V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it's existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizing compiler, *and* you get speeds that took other languages man-years (man-decades?) to achieve. Where do I sign up?
 
-To see if the claims are true I'm going to write another simple Lisp language which I'll unimaginatively call Truffler and see how easy it is. I'll write a simple, non-Truffle interpreter and judge how easy it is to translate to Truffle. I'll take benchmarks to see what kind of speed gains we get by switching over to Truffle. If everything goes well, perhaps this proof of concept will reach speeds comparable to other production-quality lisps like Clojure, Racket or CHICKEN (scheme), but I'm getting ahead of myself.
+To see if the claims are true I'm going to write another simple Lisp language which I'll call Mumbler and see how easy it is. I'll write a simple, non-Truffle interpreter and judge how easy it is to translate to Truffle. I'll take benchmarks to see what kind of speed gains we get by switching over to Truffle. If everything goes well, perhaps this proof of concept will reach speeds comparable to other production-quality lisps like Clojure, Racket or CHICKEN (scheme), but I'm getting ahead of myself.
 
-Truffler Language
+Mumbler Language
 =================
 
-I'm going to try to keep a balance between simplicity and useful features. I don't want a language that's so simple that it's a strawman, but I don't want to spend too much time writing a language I intend to throw away. Truffler will be a simple but fullblown language. I'll stick to basic datatypes and little-to-no syntactic sugar.
+I'm going to try to keep a balance between simplicity and useful features. I don't want a language that's so simple that it's a strawman, but I don't want to spend too much time writing a language I intend to throw away. Mumbler will be a simple but fullblown language. I'll stick to basic datatypes and little-to-no syntactic sugar.
 
-For those unfamiliar with lisps, it operates much like other dynamic languages. The biggest difference to most people is all the parentheses in the syntax, but they are there for a reason. Lisp programs are written in its own datatypes. This means that every element you see in Truffler (and all lisps) is the same datatype you use within your own program. This uniformity gives lisps a lot of power which Truffler sadly doesn't tap for the sake of brevity. The language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.
+For those unfamiliar with lisps, it operates much like other dynamic languages. The biggest difference to most people is all the parentheses in the syntax, but they are there for a reason. Lisp programs are written in its own datatypes. This means that every element you see in Mumbler (and all lisps) is the same datatype you use within your own program. This uniformity gives lisps a lot of power which Mumbler sadly doesn't tap for the sake of brevity. The language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.
 
 Datatypes
 ---------
 
   - Numbers (e.g., `1`, `400`)
 
-    Truffler will stick with positive integer literals. You can use the `-` function to create negative numbers if need be. This will be implemented by boxed Long. It's slow, but we're shooting for a barebones language. We also won't deal with integer overflows.
+    Mumbler will stick with positive integer literals. You can use the `-` function to create negative numbers if need be. This will be implemented by boxed Long. It's slow, but we're shooting for a barebones language. We also won't deal with integer overflows.
 
   - Boolean (i.e., `#t`, `#f`)
 
@@ -45,11 +46,11 @@ Datatypes
 
   - List (e.g., `(1 2 3)`, `(a list of symbols)`)
 
-    Lists are the only way to make compound structures in Truffler. It's a little limiting but it's plenty for our little language.
+    Lists are the only way to make compound structures in Mumbler. It's a little limiting but it's plenty for our little language.
 
     Lists are implemented as singly-linked lists. There are pros and cons with this implementation, but it's the traditional implementation in lisps. We're not blazing any trails here with language design so we'll stick with the tried and true implementation.
 
-    The empty list `()` acts as Trufflers `null` value.
+    The empty list `()` acts as Mumblers `null` value.
 
 
 Syntax
@@ -63,18 +64,18 @@ The syntax is simple.
   - An open paren `(` starts a new list. A `)` is closes the list. Lists can be nested.
   - Everything else is a symbol.
 
-Here is some syntactically correct Truffler code:
+Here is some syntactically correct Mumbler code:
 
         12344
         -123
-        the-above-is-a-symbol-because-Truffler-does-not-have-negative-numbers
+        the-above-is-a-symbol-because-Mumbler-does-not-have-negative-numbers
         #t
         (a list of symbols)
 
 Evaluation
 ----------
 
-To keep with our theme of simple, evaluation is as basic as we can make it. The program is evaluated from top to bottom. That means that a variable definition must appear before its use. Everything is an expression. Since Truffler programs are made of Truffler datatypes every datatype has a well-defined evaluation strategy.
+To keep with our theme of simple, evaluation is as basic as we can make it. The program is evaluated from top to bottom. That means that a variable definition must appear before its use. Everything is an expression. Since Mumbler programs are made of Mumbler datatypes every datatype has a well-defined evaluation strategy.
 
   - Number (e.g., `1`, `4929`)
 
@@ -95,9 +96,9 @@ To keep with our theme of simple, evaluation is as basic as we can make it. The 
 Scoping
 -------
 
-Truffler has lexical scope. If you've used any modern dynamic languages like Javascript, Python or Ruby then you know how this works. Basically, it means that functions defined within a wrapping function has access to the outer function's variables--even if the inner function is the return value and is not called until some time in the future.
+Mumbler has lexical scope. If you've used any modern dynamic languages like Javascript, Python or Ruby then you know how this works. Basically, it means that functions defined within a wrapping function has access to the outer function's variables--even if the inner function is the return value and is not called until some time in the future.
 
-Truffler doesn't have blocks (the list of statements within `{}` in languages like Java, C, C++). New scopes are only created within new functions.
+Mumbler doesn't have blocks (the list of statements within `{}` in languages like Java, C, C++). New scopes are only created within new functions.
 
 Special Forms
 -------------
@@ -128,7 +129,7 @@ The evaluation process for function calls is defined to evaluate all the argumen
 
   - `quote`
 
-    This returns the argument without evaluating it. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. `quote` allows us to do that. With lists you can use the `list` builtin function to get a list object, but symbols need `quote` because there's no other way to get a Symbol object.
+    This returns the argument without evaluating it. Since all instances of Symbol and List types in Mumbler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. `quote` allows us to do that. With lists you can use the `list` builtin function to get a list object, but symbols need `quote` because there's no other way to get a Symbol object.
 
     Keep in mind, quote doesn't evaluate anything in its argument. That means if you pass a list it's elements are not evaluated. A symbol within a list will stay a symbol. You're better off using the `list` function unless you really want a list of symbols.
 
@@ -141,11 +142,11 @@ With these few special forms we have a fully functional, Turing-complete program
 Builtin Functions
 -----------------
 
-Although we have a Turing-complete language it isn't very useful if we can't do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There's nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.
+Although we have a Turing-complete language it isn't very useful if we can't do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Mumbler. There's nothing special about these functions other than they already exist when Mumbler starts. They are evaluated and called like user-defined functions.
 
   - Arimetic functions (`+`, `-`, `*`, `/`, `%`, `=`, `>`, `<`)
 
-    We have your basic arithmetic operations. Remember, Truffler only has integers so `/` does integer division and `%` is the modulo function.
+    We have your basic arithmetic operations. Remember, Mumbler only has integers so `/` does integer division and `%` is the modulo function.
 
   - List functions (`list`, `cons`, `car`, `cdr`)
 
@@ -153,12 +154,12 @@ Although we have a Turing-complete language it isn't very useful if we can't do 
 
   - IO functions (`println`, `now`)
 
-    Since we're not planning to do any real work in Truffler, we'll just implement a function to send data to standard out and get a current timestamp.
+    Since we're not planning to do any real work in Mumbler, we'll just implement a function to send data to standard out and get a current timestamp.
 
 I may have to add more functions in the future but this is a good start.
 
 
-SimpleTruffler
+SimpleMumbler
 ==============
 
 Now with a clear idea of what language we're creating, let's get started! We'll start with an interpreter that _doesn't_ use Truffle as a base comparison. This version will be written the way I would normally write toy langauges, à la Peter Norvig's [lispy](http://norvig.com/lispy.html).
@@ -171,21 +172,21 @@ The architecture will be a simple pipline from program text to evaluated result.
 
         Read program text and return tree of expressions -> evaluate tree
 
-The `Reader` class will encapsulate converting from program text and return the tree of Truffler expressions. The abstract syntax tree's (AST's) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.
+The `Reader` class will encapsulate converting from program text and return the tree of Mumbler expressions. The abstract syntax tree's (AST's) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.
 
 Our main class will look like:
 
 ```java
-public class SimpleTrufflerMain {
+public class SimpleMumblerMain {
     public static void main(String[] args) throws IOException {
-        assert args.length == 1 : "Truffler file required";
-        runTruffler(args[0]);
+        assert args.length == 1 : "Mumbler file required";
+        runMumbler(args[0]);
     }
 
-    private static void runTruffler(String filename) throws IOException {
+    private static void runMumbler(String filename) throws IOException {
         Environment topEnv = Environment.getBaseEnvironment();
 
-        TrufflerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
+        MumblerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
         for (Node node : nodes) {
             node.eval(topEnv);
         }
@@ -202,13 +203,13 @@ We can make a small addition at essentially no cost. We can take the basic flow 
 Our updated main class is:
 
 ```java
-public class SimpleTrufflerMain {
+public class SimpleMumblerMain {
     public static void main(String[] args) throws IOException {
-        assert args.length < 2 : "SimpleTruffler only accepts 1 or 0 files";
+        assert args.length < 2 : "SimpleMumbler only accepts 1 or 0 files";
         if (args.length == 0) {
             startREPL();
         } else {
-            runTruffler(args[0]);
+            runMumbler(args[0]);
         }
     }
 
@@ -223,7 +224,7 @@ public class SimpleTrufflerMain {
                 // EOF sent
                 break;
             }
-            TrufflerListNode<Node> nodes = Reader.read(
+            MumblerListNode<Node> nodes = Reader.read(
                     new ByteArrayInputStream(data.getBytes()));
 
             // EVAL
@@ -233,16 +234,16 @@ public class SimpleTrufflerMain {
             }
 
             // PRINT
-            if (result != TrufflerListNode.EMPTY) {
+            if (result != MumblerListNode.EMPTY) {
                 System.out.println(result);
             }
         }
     }
 
-    private static void runTruffler(String filename) throws IOException {
+    private static void runMumbler(String filename) throws IOException {
         Environment topEnv = Environment.getBaseEnvironment();
 
-        TrufflerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
+        MumblerListNode<Node> nodes = Reader.read(new FileInputStream(filename));
         for (Node node : nodes) {
             node.eval(topEnv);
         }
@@ -250,13 +251,13 @@ public class SimpleTrufflerMain {
 }
 ```
 
-We're being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an `InputStream` into a tree of Truffler expressions.
+We're being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an `InputStream` into a tree of Mumbler expressions.
 
 
 Reading
 -------
 
-Typically, languages break this up into two stages: lexing (text -> tokens), parsing (tokens -> syntax tree). I'm going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.
+Typically, languages break this up into two stages: lexing (text -> tokens), parsing (tokens -> syntax tree). I'm going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Mumbler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.
 
 The basic flow of the reader is to read one character then dispatch to specialized read methods depending on the character read. Our `readNode` function:
 
@@ -278,14 +279,14 @@ public static Node readNode(PushbackReader pstream) throws IOException {
 }
 ```
 
-If you look closely at our implementation of SimpleTrufflerMain you'll see that we call `Reader.read` and it returns a TrufflerListNode. Our `read` method can read multiple nodes at once and return them all. The `read` method:
+If you look closely at our implementation of SimpleMumblerMain you'll see that we call `Reader.read` and it returns a MumblerListNode. Our `read` method can read multiple nodes at once and return them all. The `read` method:
 
 ```java
-public static TrufflerListNode read(InputStream istream) throws IOException {
+public static MumblerListNode read(InputStream istream) throws IOException {
     return read(new PushbackReader(new InputStreamReader(istream)));
 }
 
-private static TrufflerListNode read(PushbackReader pstream)
+private static MumblerListNode read(PushbackReader pstream)
         throws IOException {
     List<Node> nodes = new ArrayList<Node>();
 
@@ -298,13 +299,13 @@ private static TrufflerListNode read(PushbackReader pstream)
         c = (char) pstream.read();
     }
 
-    return TrufflerListNode.list(nodes);
+    return MumblerListNode.list(nodes);
 }
 ```
 
 Within `Reader` we only deal with `PushbackReader` objects. The public method `read(InputStream istream)` just converts the `InputStream` to a `PushbackReader`.
 
-As you can see the `read` method is straightforward. It accumulates all Node values into a list while the end-of-file hasn't been reached then returns a TrufflerListNode when it's done. It's also responsible for reading and throwing away whitespace so `readNode` doesn't have to worry about it.
+As you can see the `read` method is straightforward. It accumulates all Node values into a list while the end-of-file hasn't been reached then returns a MumblerListNode when it's done. It's also responsible for reading and throwing away whitespace so `readNode` doesn't have to worry about it.
 
 I'm going to skip passed showing all the different read methods. They're what you expect: read until you find a separator then convert the string to it's respective type (i.e., number, boolean or symbol). I will show how lists are read because of some interesting twists. Lists are recursive and can read other nodes. We also check for special forms.
 
@@ -327,7 +328,7 @@ private static Node readList(PushbackReader pstream) throws IOException {
             list.add(readNode(pstream));
         }
     } while (true);
-    return SpecialForm.check(TrufflerListNode.list(list));
+    return SpecialForm.check(MumblerListNode.list(list));
 }
 ```
 
@@ -339,8 +340,8 @@ private static final SymbolNode LAMBDA = new SymbolNode("lambda");
 private static final SymbolNode IF = new SymbolNode("if");
 private static final SymbolNode QUOTE = new SymbolNode("quote");
 
-public static Node check(TrufflerListNode l) {
-    if (l == TrufflerListNode.EMPTY) {
+public static Node check(MumblerListNode l) {
+    if (l == MumblerListNode.EMPTY) {
         return l;
     } else if (l.car.equals(DEFINE)) {
         return new DefineSpecialForm(l);
@@ -409,7 +410,7 @@ public class SymbolNode extends Node {
 ```
 
 
-The Environment class is just a simple mapping between strings and objects. Because Truffler is lexically scoped, the Environment's parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.
+The Environment class is just a simple mapping between strings and objects. Because Mumbler is lexically scoped, the Environment's parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.
 
 ```java
 public class Environment {
@@ -440,10 +441,10 @@ public class Environment {
 }
 ```
 
-`TrufflerListNode` is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to a `Function` and its `apply` method is called with the rest of the list elements passed as arguments.
+`MumblerListNode` is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective `eval` methods. The first element is then cast to a `Function` and its `apply` method is called with the rest of the list elements passed as arguments.
 
 ```java
-public class TrufflerListNode extends Node implements Iterable<Node> {
+public class MumblerListNode extends Node implements Iterable<Node> {
     // other code...
 
     @Override
@@ -496,11 +497,11 @@ new Function() {
 
 ### Special form evaluation
 
-We've covered how Truffler's basic datatypes are evaluated; all that's left are the few special cases: `define`, `lambda`, `if` and `quote`. Remember, in the `Reader` when we encounter list forms that have these special symbols as their first element we replace the whole TrufflerListNode object with a new `SpecialForm`. This way, when we `eval` them, we can have whatever we want happen. For example, `define` takes the third element (a value) and stores it in the current namespace under the name given in the second element.
+We've covered how Mumbler's basic datatypes are evaluated; all that's left are the few special cases: `define`, `lambda`, `if` and `quote`. Remember, in the `Reader` when we encounter list forms that have these special symbols as their first element we replace the whole MumblerListNode object with a new `SpecialForm`. This way, when we `eval` them, we can have whatever we want happen. For example, `define` takes the third element (a value) and stores it in the current namespace under the name given in the second element.
 
 ```java
 private static class DefineSpecialForm extends SpecialForm {
-    public DefineSpecialForm(TrufflerListNode listNode) {
+    public DefineSpecialForm(MumblerListNode listNode) {
         super(listNode);
     }
 
@@ -509,7 +510,7 @@ private static class DefineSpecialForm extends SpecialForm {
         SymbolNode sym = (SymbolNode) this.node.cdr.car; // 2nd element
         env.putValue(sym.name,
                 this.node.cdr.cdr.car.eval(env)); // 3rd element
-        return TrufflerListNode.EMPTY;
+        return MumblerListNode.EMPTY;
     }
 }
 ```
@@ -518,20 +519,20 @@ I showed the return `Function` object for the `LambdaSpecialForm`. The rest of `
 
 ```java
 private static class LambdaSpecialForm extends SpecialForm {
-     public LambdaSpecialForm(TrufflerListNode paramsAndBody) {
+     public LambdaSpecialForm(MumblerListNode paramsAndBody) {
          super(paramsAndBody);
      }
 
      @Override
      public Object eval(final Environment parentEnv) {
-         final TrufflerListNode formalParams = (TrufflerListNode) this.node.cdr.car;
-         final TrufflerListNode body = this.node.cdr.cdr;
+         final MumblerListNode formalParams = (MumblerListNode) this.node.cdr.car;
+         final MumblerListNode body = this.node.cdr.cdr;
          return new Function() { /* function definition goes here */ };
      }
  }
 ```
 
-The other [`if`](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L63) and [`quote`](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L83) special forms do what you expect. If you're interested, you can check out the code.
+The other [`if`](https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/node/SpecialForm.java#L63) and [`quote`](https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/node/SpecialForm.java#L83) special forms do what you expect. If you're interested, you can check out the code.
 
 
 ### Builtin Functions
@@ -574,16 +575,16 @@ static final Function MINUS = new BuiltinFn("MINUS") {
 };
 ```
 
-You get the idea. You can see the implementation of the other builtin functions on [GitHub](https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/env/BuiltinFn.java).
+You get the idea. You can see the implementation of the other builtin functions on [GitHub](https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/env/BuiltinFn.java).
 
 
 Print
 -----
 
-Rounding out the REPL, we print out the result. There's not much here. We just call `System.out.println` and that's that. Okay, there's one little catch. Since we use the empty list as Truffler's "null" value, we just don't print anything if that's what's returned in the REPL.
+Rounding out the REPL, we print out the result. There's not much here. We just call `System.out.println` and that's that. Okay, there's one little catch. Since we use the empty list as Mumbler's "null" value, we just don't print anything if that's what's returned in the REPL.
 
 
-Truffler in action
+Mumbler in action
 ==================
 
 Now that we have a language spec and an implementation we can take it for a spin. We would start with Hello World, but we didn't imlement strings! We'll do the next best thing and use symbols.
@@ -606,7 +607,7 @@ Close enough, and it works! Let's try something a little more involved. How abou
 (fib 10)
 ; 55
 ```
-Great! We get the correct answer. We have a working program! As you can see, Truffler would be easier to read if it had nice sugar like a function-define, but we can get by without it.
+Great! We get the correct answer. We have a working program! As you can see, Mumbler would be easier to read if it had nice sugar like a function-define, but we can get by without it.
 
 
 Benchmarks
@@ -627,15 +628,15 @@ With our working program what kind of performance do we get? More importantly, h
         total time: 82
 
 
-That's pretty fast. How does SimpleTruffler do?
+That's pretty fast. How does SimpleMumbler do?
         
-        truffler
+        mumbler
         --------------
         1346269
         ('computation-time: 1502)
         total time: 1644
 
-Ouch. Things aren't looking so hot for our little interpreter. It performs about 100x _slower_ than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleTruffler doesn't have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?
+Ouch. Things aren't looking so hot for our little interpreter. It performs about 100x _slower_ than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleMumbler doesn't have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?
 
         py
         --------------
@@ -643,14 +644,14 @@ Ouch. Things aren't looking so hot for our little interpreter. It performs about
         computation time: 385
         total time: 400
 
-Better. SimpleTruffler is only 4x slower than CPython. Not bad for a language quicky thrown together. CPython is written in C and has a bytecode interpreter that helps explain why it's faster than our little language.
+Better. SimpleMumbler is only 4x slower than CPython. Not bad for a language quicky thrown together. CPython is written in C and has a bytecode interpreter that helps explain why it's faster than our little language.
 
 I'll settle for fibonacci as a benchmark. Our terribly inefficient algorithm gives us plenty of avenues for improvement. We make a lot of function calls so if we improve that we should get a big speed up. Getting rid of boxed longs would really help.
 
 Algorithms > Interpreter
 ---------------------------------------
 
-Out of curiosity, I converted the Truffler implementation to one that uses a much faster, linear algorithm.
+Out of curiosity, I converted the Mumbler implementation to one that uses a much faster, linear algorithm.
 
 ```scheme
 (define fibonacci
@@ -666,16 +667,16 @@ Out of curiosity, I converted the Truffler implementation to one that uses a muc
 ```
 This version runs through the fibonacci numbers sequentially instead of blowing up exponentially. This is an example of [linear recursion](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1) vs [tree recursion](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2). You can read [SICP](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2) for more info on this. So how does our smarter algorithm perform:
 
-        truffler
+        mumbler
         --------------
         1346269
         ('computation-time: 8)
         total time: 169
 
-Wow. Now that's an improvement. The algorithm chosen has much more to do with speed than the language implementation. In it's current state, SimpleTruffler could be "good enough" for many small tasks and give you reasonable speed. If you're writing a DSL to glue code written in other faster languages maybe a simple interpreter is all you need. But let's assume we're writing a general purpose language that needs faster function calls and numeric operations.
+Wow. Now that's an improvement. The algorithm chosen has much more to do with speed than the language implementation. In it's current state, SimpleMumbler could be "good enough" for many small tasks and give you reasonable speed. If you're writing a DSL to glue code written in other faster languages maybe a simple interpreter is all you need. But let's assume we're writing a general purpose language that needs faster function calls and numeric operations.
 
 
 Next Time
 =========
 
-We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we'll actually start looking at Truffle and begin migrating SimpleTruffler over to it. Maybe along the way we'll add some more benchmarks to get a better picture of our language's speed.
+We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we'll actually start looking at Truffle and begin migrating SimpleMumbler over to it. Maybe along the way we'll add some more benchmarks to get a better picture of our language's speed.

@@ -4,7 +4,7 @@
 
     <meta charset="utf-8">
     <title>Writing a Language in Truffle: Part 1</title>
-    <meta name="description" content="Ever since implementing a meta circular evaluator in college I've enjoyed implementing little lisp interpreters in languages. It's one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a ...">
+    <meta name="description" content="How hard is it to write a simple, fast interpreter? Let's find out.  Ever since implementing a meta circular evaluator in college I've enjoyed implementing little lisp interpreters in languages. It's one of those starting projects I do when learning a new...">
     <meta name="author"      content="Cristian Esquivias">
     <meta name="keywords"    content="java, truffle">
     <meta name="viewport"    content="width=device-width, initial-scale=1.0">
@@ -91,6 +91,8 @@
 <time datetime="2014-10-13" pubdate="true">2014-10-13</time> :: <span class="tags"><a href="/tags/java.html">java</a>, <a href="/tags/truffle.html">truffle</a></span></p>
   </header>
 
+<p class="subtitle">How hard is it to write a simple, fast interpreter? Let's find out.</p>
+
 <p>Ever since implementing a <a href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node76.html">meta circular evaluator</a> in college I&rsquo;ve enjoyed implementing little lisp interpreters in languages. It&rsquo;s one of those starting projects I do when learning a new programming language. When I first learned Python and implemented a lisp interpreter I was amazed at how small and easy to read the implementation was. Little did I know Peter Norvig beat me to <a href="http://norvig.com/lispy.html">a better python lisp interpreter</a>. Nonetheless, it&rsquo;s a fun little exercise to get acquainted with a new programming environment and appeases my curiosity in languages and interpreters.</p>
 
 <p>Of course my toy interpreters are just that: a toy. Writing a lisp interpreter on top of an already slow language like Python will not win any speed competitions. You may get away with writing small Domain Specific Languages (DSLs) as an interpreter, but you can forget about any general programming language. The performance hit makes it untenable unless you write it in some lower level language like C; who wants to do that? If you want to target higher level virtual machines like the JVM you&rsquo;re left with writing a compiler that takes your code and produces JVM bytecode. How about writing a compiler that targets Javascript? Another not-so-fun alternative.</p>
@@ -102,20 +104,20 @@
 
 <p>The initial results of Truffle are very exciting. Implementations of Ruby and Javascript in Truffle have performances on the same order of magnitude as the much bigger projects of JRuby and Nashorn, respectively. They are even comparable in speed to more established projects like the Google&rsquo;s V8 Javascript interpreter. The kick: these Truffle implementations were done with fewer people in a shorter period of time. This means you can create your own language on the JVM that takes advantage of all it&rsquo;s existing libraries, native threading, JIT compiler without without having to write your own fullblown optimizing compiler, <em>and</em> you get speeds that took other languages man-years (man-decades?) to achieve. Where do I sign up?</p>
 
-<p>To see if the claims are true I&rsquo;m going to write another simple Lisp language which I&rsquo;ll unimaginatively call Truffler and see how easy it is. I&rsquo;ll write a simple, non-Truffle interpreter and judge how easy it is to translate to Truffle. I&rsquo;ll take benchmarks to see what kind of speed gains we get by switching over to Truffle. If everything goes well, perhaps this proof of concept will reach speeds comparable to other production-quality lisps like Clojure, Racket or CHICKEN (scheme), but I&rsquo;m getting ahead of myself.</p>
+<p>To see if the claims are true I&rsquo;m going to write another simple Lisp language which I&rsquo;ll call Mumbler and see how easy it is. I&rsquo;ll write a simple, non-Truffle interpreter and judge how easy it is to translate to Truffle. I&rsquo;ll take benchmarks to see what kind of speed gains we get by switching over to Truffle. If everything goes well, perhaps this proof of concept will reach speeds comparable to other production-quality lisps like Clojure, Racket or CHICKEN (scheme), but I&rsquo;m getting ahead of myself.</p>
 
-<h1 id="truffler-language">Truffler Language</h1>
+<h1 id="mumbler-language">Mumbler Language</h1>
 
-<p>I&rsquo;m going to try to keep a balance between simplicity and useful features. I don&rsquo;t want a language that&rsquo;s so simple that it&rsquo;s a strawman, but I don&rsquo;t want to spend too much time writing a language I intend to throw away. Truffler will be a simple but fullblown language. I&rsquo;ll stick to basic datatypes and little-to-no syntactic sugar.</p>
+<p>I&rsquo;m going to try to keep a balance between simplicity and useful features. I don&rsquo;t want a language that&rsquo;s so simple that it&rsquo;s a strawman, but I don&rsquo;t want to spend too much time writing a language I intend to throw away. Mumbler will be a simple but fullblown language. I&rsquo;ll stick to basic datatypes and little-to-no syntactic sugar.</p>
 
-<p>For those unfamiliar with lisps, it operates much like other dynamic languages. The biggest difference to most people is all the parentheses in the syntax, but they are there for a reason. Lisp programs are written in its own datatypes. This means that every element you see in Truffler (and all lisps) is the same datatype you use within your own program. This uniformity gives lisps a lot of power which Truffler sadly doesn&rsquo;t tap for the sake of brevity. The language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.</p>
+<p>For those unfamiliar with lisps, it operates much like other dynamic languages. The biggest difference to most people is all the parentheses in the syntax, but they are there for a reason. Lisp programs are written in its own datatypes. This means that every element you see in Mumbler (and all lisps) is the same datatype you use within your own program. This uniformity gives lisps a lot of power which Mumbler sadly doesn&rsquo;t tap for the sake of brevity. The language will have a syntax as simple as possible and only a couple of datatypes. Lisps can go very far with what would normally be considered an anemic set of types and operations.</p>
 
 <h2 id="datatypes">Datatypes</h2>
 
 <ul>
  <li>
   <p>Numbers (e.g., <code>1</code>, <code>400</code>)</p>
-  <p>Truffler will stick with positive integer literals. You can use the <code>-</code> function to create negative numbers if need be. This will be implemented by boxed Long. It&rsquo;s slow, but we&rsquo;re shooting for a barebones language. We also won&rsquo;t deal with integer overflows.</p></li>
+  <p>Mumbler will stick with positive integer literals. You can use the <code>-</code> function to create negative numbers if need be. This will be implemented by boxed Long. It&rsquo;s slow, but we&rsquo;re shooting for a barebones language. We also won&rsquo;t deal with integer overflows.</p></li>
  <li>
   <p>Boolean (i.e., <code>#t</code>, <code>#f</code>)</p>
   <p>Nothing special here. The tokens <code>#t</code> and <code>#f</code> will evaluate to the Java static final values <code>Boolean.TRUE</code> and <code>Boolean.FALSE</code>, respectively.</p></li>
@@ -127,9 +129,9 @@
   <p>Functions are written with the <code>lambda</code> special form. Functions are first class values that can be stored in a variable, passed to another function or returned by a function.</p></li>
  <li>
   <p>List (e.g., <code>(1 2 3)</code>, <code>(a list of symbols)</code>)</p>
-  <p>Lists are the only way to make compound structures in Truffler. It&rsquo;s a little limiting but it&rsquo;s plenty for our little language.</p>
+  <p>Lists are the only way to make compound structures in Mumbler. It&rsquo;s a little limiting but it&rsquo;s plenty for our little language.</p>
   <p>Lists are implemented as singly-linked lists. There are pros and cons with this implementation, but it&rsquo;s the traditional implementation in lisps. We&rsquo;re not blazing any trails here with language design so we&rsquo;ll stick with the tried and true implementation.</p>
-  <p>The empty list <code>()</code> acts as Trufflers <code>null</code> value.</p></li></ul>
+  <p>The empty list <code>()</code> acts as Mumblers <code>null</code> value.</p></li></ul>
 
 <h2 id="syntax">Syntax</h2>
 
@@ -142,17 +144,17 @@
  <li>An open paren <code>(</code> starts a new list. A <code>)</code> is closes the list. Lists can be nested.</li>
  <li>Everything else is a symbol.</li></ul>
 
-<p>Here is some syntactically correct Truffler code:</p>
+<p>Here is some syntactically correct Mumbler code:</p>
 
 <pre><code>    12344
     -123
-    the-above-is-a-symbol-because-Truffler-does-not-have-negative-numbers
+    the-above-is-a-symbol-because-Mumbler-does-not-have-negative-numbers
     #t
     (a list of symbols)</code></pre>
 
 <h2 id="evaluation">Evaluation</h2>
 
-<p>To keep with our theme of simple, evaluation is as basic as we can make it. The program is evaluated from top to bottom. That means that a variable definition must appear before its use. Everything is an expression. Since Truffler programs are made of Truffler datatypes every datatype has a well-defined evaluation strategy.</p>
+<p>To keep with our theme of simple, evaluation is as basic as we can make it. The program is evaluated from top to bottom. That means that a variable definition must appear before its use. Everything is an expression. Since Mumbler programs are made of Mumbler datatypes every datatype has a well-defined evaluation strategy.</p>
 
 <ul>
  <li>
@@ -170,9 +172,9 @@
 
 <h2 id="scoping">Scoping</h2>
 
-<p>Truffler has lexical scope. If you&rsquo;ve used any modern dynamic languages like Javascript, Python or Ruby then you know how this works. Basically, it means that functions defined within a wrapping function has access to the outer function&rsquo;s variables&mdash;even if the inner function is the return value and is not called until some time in the future.</p>
+<p>Mumbler has lexical scope. If you&rsquo;ve used any modern dynamic languages like Javascript, Python or Ruby then you know how this works. Basically, it means that functions defined within a wrapping function has access to the outer function&rsquo;s variables&mdash;even if the inner function is the return value and is not called until some time in the future.</p>
 
-<p>Truffler doesn&rsquo;t have blocks (the list of statements within <code>{}</code> in languages like Java, C, C++). New scopes are only created within new functions.</p>
+<p>Mumbler doesn&rsquo;t have blocks (the list of statements within <code>{}</code> in languages like Java, C, C++). New scopes are only created within new functions.</p>
 
 <h2 id="special-forms">Special Forms</h2>
 
@@ -195,7 +197,7 @@
   <p>Example: <code>(if (= x 0) (+ x 1) (- x 3))</code></p></li>
  <li>
   <p><code>quote</code></p>
-  <p>This returns the argument without evaluating it. Since all instances of Symbol and List types in Truffler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. <code>quote</code> allows us to do that. With lists you can use the <code>list</code> builtin function to get a list object, but symbols need <code>quote</code> because there&rsquo;s no other way to get a Symbol object.</p>
+  <p>This returns the argument without evaluating it. Since all instances of Symbol and List types in Mumbler evaluate to variable lookup and function calls, respectively, we need a way to get a hold of actual Symbol and List objects. <code>quote</code> allows us to do that. With lists you can use the <code>list</code> builtin function to get a list object, but symbols need <code>quote</code> because there&rsquo;s no other way to get a Symbol object.</p>
   <p>Keep in mind, quote doesn&rsquo;t evaluate anything in its argument. That means if you pass a list it&rsquo;s elements are not evaluated. A symbol within a list will stay a symbol. You&rsquo;re better off using the <code>list</code> function unless you really want a list of symbols.</p>
   <p>Because numbers and booleans evaluate to themselves, quoting them doesn&rsquo;t do anything.</p>
   <p>Example: <code>(quote (a list of undefined symbols))</code></p></li></ul>
@@ -204,22 +206,22 @@
 
 <h2 id="builtin-functions">Builtin Functions</h2>
 
-<p>Although we have a Turing-complete language it isn&rsquo;t very useful if we can&rsquo;t do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Truffler. There&rsquo;s nothing special about these functions other than they already exist when Truffler starts. They are evaluated and called like user-defined functions.</p>
+<p>Although we have a Turing-complete language it isn&rsquo;t very useful if we can&rsquo;t do anything like interact with the outside world or manipulate our datatypes. Here are the builtin functions that come with Mumbler. There&rsquo;s nothing special about these functions other than they already exist when Mumbler starts. They are evaluated and called like user-defined functions.</p>
 
 <ul>
  <li>
   <p>Arimetic functions (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>=</code>, <code>&gt;</code>, <code>&lt;</code>)</p>
-  <p>We have your basic arithmetic operations. Remember, Truffler only has integers so <code>/</code> does integer division and <code>%</code> is the modulo function.</p></li>
+  <p>We have your basic arithmetic operations. Remember, Mumbler only has integers so <code>/</code> does integer division and <code>%</code> is the modulo function.</p></li>
  <li>
   <p>List functions (<code>list</code>, <code>cons</code>, <code>car</code>, <code>cdr</code>)</p>
   <p>Our basic functions for creating, prepending and splicing lists. The names <code>cons</code>, <code>car</code>, <code>cdr</code> probably don&rsquo;t make sense if you&rsquo;re unfamiliar with lisp but they basically mean <code>prepend</code>, <code>first</code>, <code>rest</code> respectively. Again, we&rsquo;re sticking with lisp tradition here. For more background, you can read the Wikpedia article on <a href="http://en.wikipedia.org/wiki/Cons">cons</a>.</p></li>
  <li>
   <p>IO functions (<code>println</code>, <code>now</code>)</p>
-  <p>Since we&rsquo;re not planning to do any real work in Truffler, we&rsquo;ll just implement a function to send data to standard out and get a current timestamp.</p></li></ul>
+  <p>Since we&rsquo;re not planning to do any real work in Mumbler, we&rsquo;ll just implement a function to send data to standard out and get a current timestamp.</p></li></ul>
 
 <p>I may have to add more functions in the future but this is a good start.</p>
 
-<h1 id="simpletruffler">SimpleTruffler</h1>
+<h1 id="simplemumbler">SimpleMumbler</h1>
 
 <p>Now with a clear idea of what language we&rsquo;re creating, let&rsquo;s get started! We&rsquo;ll start with an interpreter that <em>doesn&rsquo;t</em> use Truffle as a base comparison. This version will be written the way I would normally write toy langauges, à la Peter Norvig&rsquo;s <a href="http://norvig.com/lispy.html">lispy</a>.</p>
 
@@ -229,7 +231,7 @@
 
 <pre><code>    Read program text and return tree of expressions -&gt; evaluate tree</code></pre>
 
-<p>The <code>Reader</code> class will encapsulate converting from program text and return the tree of Truffler expressions. The abstract syntax tree&rsquo;s (AST&rsquo;s) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.</p>
+<p>The <code>Reader</code> class will encapsulate converting from program text and return the tree of Mumbler expressions. The abstract syntax tree&rsquo;s (AST&rsquo;s) top node will be called with a default environment that includes all builtin functions. When interpreting a file the result of the top evaluation will be dropped.</p>
 
 <p>Our main class will look like:</p>
 
@@ -256,16 +258,16 @@
 15</pre></div></td>
     <td class="code">
      <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleTrufflerMain</span> <span class="o">{</span>
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleMumblerMain</span> <span class="o">{</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">:</span> <span class="s">"Truffler file required"</span><span class="o">;</span>
-        <span class="n">runTruffler</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
+        <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">:</span> <span class="s">"Mumbler file required"</span><span class="o">;</span>
+        <span class="n">runMumbler</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
     <span class="o">}</span>
 
-    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">runTruffler</span><span class="o">(</span><span class="n">String</span> <span class="n">filename</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">runMumbler</span><span class="o">(</span><span class="n">String</span> <span class="n">filename</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">Environment</span> <span class="n">topEnv</span> <span class="o">=</span> <span class="n">Environment</span><span class="o">.</span><span class="na">getBaseEnvironment</span><span class="o">();</span>
 
-        <span class="n">TrufflerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">filename</span><span class="o">));</span>
+        <span class="n">MumblerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">filename</span><span class="o">));</span>
         <span class="k">for</span> <span class="o">(</span><span class="n">Node</span> <span class="n">node</span> <span class="o">:</span> <span class="n">nodes</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">node</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span><span class="n">topEnv</span><span class="o">);</span>
         <span class="o">}</span>
@@ -335,13 +337,13 @@
 46</pre></div></td>
     <td class="code">
      <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleTrufflerMain</span> <span class="o">{</span>
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleMumblerMain</span> <span class="o">{</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">:</span> <span class="s">"SimpleTruffler only accepts 1 or 0 files"</span><span class="o">;</span>
+        <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">:</span> <span class="s">"SimpleMumbler only accepts 1 or 0 files"</span><span class="o">;</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">startREPL</span><span class="o">();</span>
         <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-            <span class="n">runTruffler</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
+            <span class="n">runMumbler</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
         <span class="o">}</span>
     <span class="o">}</span>
 
@@ -356,7 +358,7 @@
                 <span class="c1">// EOF sent</span>
                 <span class="k">break</span><span class="o">;</span>
             <span class="o">}</span>
-            <span class="n">TrufflerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span>
+            <span class="n">MumblerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span>
                     <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">data</span><span class="o">.</span><span class="na">getBytes</span><span class="o">()));</span>
 
             <span class="c1">// EVAL</span>
@@ -366,16 +368,16 @@
             <span class="o">}</span>
 
             <span class="c1">// PRINT</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">TrufflerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">MumblerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
                 <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
             <span class="o">}</span>
         <span class="o">}</span>
     <span class="o">}</span>
 
-    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">runTruffler</span><span class="o">(</span><span class="n">String</span> <span class="n">filename</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">runMumbler</span><span class="o">(</span><span class="n">String</span> <span class="n">filename</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">Environment</span> <span class="n">topEnv</span> <span class="o">=</span> <span class="n">Environment</span><span class="o">.</span><span class="na">getBaseEnvironment</span><span class="o">();</span>
 
-        <span class="n">TrufflerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">filename</span><span class="o">));</span>
+        <span class="n">MumblerListNode</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">Reader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">filename</span><span class="o">));</span>
         <span class="k">for</span> <span class="o">(</span><span class="n">Node</span> <span class="n">node</span> <span class="o">:</span> <span class="n">nodes</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">node</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span><span class="n">topEnv</span><span class="o">);</span>
         <span class="o">}</span>
@@ -385,11 +387,11 @@
 </td></tr></tbody></table>
 </div>
 
-<p>We&rsquo;re being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an <code>InputStream</code> into a tree of Truffler expressions.</p>
+<p>We&rsquo;re being a little quick and dirty with IOExceptions but the happy path will work fine. Now time to delve into the converting an <code>InputStream</code> into a tree of Mumbler expressions.</p>
 
 <h2 id="reading">Reading</h2>
 
-<p>Typically, languages break this up into two stages: lexing (text -&gt; tokens), parsing (tokens -&gt; syntax tree). I&rsquo;m going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Truffler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.</p>
+<p>Typically, languages break this up into two stages: lexing (text -&gt; tokens), parsing (tokens -&gt; syntax tree). I&rsquo;m going to take another page from lisp history and combine lexing and paring into one step: reading. Because we were careful in defining the syntax of Mumbler, we can easily hand-write a reader that only needs one character of look ahead to determine what token is being read.</p>
 
 <p>The basic flow of the reader is to read one character then dispatch to specialized read methods depending on the character read. Our <code>readNode</code> function:</p>
 
@@ -435,7 +437,7 @@
 </td></tr></tbody></table>
 </div>
 
-<p>If you look closely at our implementation of SimpleTrufflerMain you&rsquo;ll see that we call <code>Reader.read</code> and it returns a TrufflerListNode. Our <code>read</code> method can read multiple nodes at once and return them all. The <code>read</code> method:</p>
+<p>If you look closely at our implementation of SimpleMumblerMain you&rsquo;ll see that we call <code>Reader.read</code> and it returns a MumblerListNode. Our <code>read</code> method can read multiple nodes at once and return them all. The <code>read</code> method:</p>
 
 <div class="brush: java">
  <table class="sourcetable">
@@ -464,11 +466,11 @@
 19</pre></div></td>
     <td class="code">
      <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">static</span> <span class="n">TrufflerListNode</span> <span class="nf">read</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">istream</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+      <pre><span class="kd">public</span> <span class="kd">static</span> <span class="n">MumblerListNode</span> <span class="nf">read</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">istream</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
     <span class="k">return</span> <span class="nf">read</span><span class="o">(</span><span class="k">new</span> <span class="n">PushbackReader</span><span class="o">(</span><span class="k">new</span> <span class="n">InputStreamReader</span><span class="o">(</span><span class="n">istream</span><span class="o">)));</span>
 <span class="o">}</span>
 
-<span class="kd">private</span> <span class="kd">static</span> <span class="n">TrufflerListNode</span> <span class="nf">read</span><span class="o">(</span><span class="n">PushbackReader</span> <span class="n">pstream</span><span class="o">)</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="n">MumblerListNode</span> <span class="nf">read</span><span class="o">(</span><span class="n">PushbackReader</span> <span class="n">pstream</span><span class="o">)</span>
         <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
     <span class="n">List</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="n">nodes</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;();</span>
 
@@ -481,7 +483,7 @@
         <span class="n">c</span> <span class="o">=</span> <span class="o">(</span><span class="kt">char</span><span class="o">)</span> <span class="n">pstream</span><span class="o">.</span><span class="na">read</span><span class="o">();</span>
     <span class="o">}</span>
 
-    <span class="k">return</span> <span class="n">TrufflerListNode</span><span class="o">.</span><span class="na">list</span><span class="o">(</span><span class="n">nodes</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">MumblerListNode</span><span class="o">.</span><span class="na">list</span><span class="o">(</span><span class="n">nodes</span><span class="o">);</span>
 <span class="o">}</span>
 </pre></div>
 </td></tr></tbody></table>
@@ -489,7 +491,7 @@
 
 <p>Within <code>Reader</code> we only deal with <code>PushbackReader</code> objects. The public method <code>read(InputStream istream)</code> just converts the <code>InputStream</code> to a <code>PushbackReader</code>.</p>
 
-<p>As you can see the <code>read</code> method is straightforward. It accumulates all Node values into a list while the end-of-file hasn&rsquo;t been reached then returns a TrufflerListNode when it&rsquo;s done. It&rsquo;s also responsible for reading and throwing away whitespace so <code>readNode</code> doesn&rsquo;t have to worry about it.</p>
+<p>As you can see the <code>read</code> method is straightforward. It accumulates all Node values into a list while the end-of-file hasn&rsquo;t been reached then returns a MumblerListNode when it&rsquo;s done. It&rsquo;s also responsible for reading and throwing away whitespace so <code>readNode</code> doesn&rsquo;t have to worry about it.</p>
 
 <p>I&rsquo;m going to skip passed showing all the different read methods. They&rsquo;re what you expect: read until you find a separator then convert the string to it&rsquo;s respective type (i.e., number, boolean or symbol). I will show how lists are read because of some interesting twists. Lists are recursive and can read other nodes. We also check for special forms.</p>
 
@@ -539,7 +541,7 @@
             <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">readNode</span><span class="o">(</span><span class="n">pstream</span><span class="o">));</span>
         <span class="o">}</span>
     <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">);</span>
-    <span class="k">return</span> <span class="n">SpecialForm</span><span class="o">.</span><span class="na">check</span><span class="o">(</span><span class="n">TrufflerListNode</span><span class="o">.</span><span class="na">list</span><span class="o">(</span><span class="n">list</span><span class="o">));</span>
+    <span class="k">return</span> <span class="n">SpecialForm</span><span class="o">.</span><span class="na">check</span><span class="o">(</span><span class="n">MumblerListNode</span><span class="o">.</span><span class="na">list</span><span class="o">(</span><span class="n">list</span><span class="o">));</span>
 <span class="o">}</span>
 </pre></div>
 </td></tr></tbody></table>
@@ -579,8 +581,8 @@
 <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">SymbolNode</span> <span class="n">IF</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SymbolNode</span><span class="o">(</span><span class="s">"if"</span><span class="o">);</span>
 <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">SymbolNode</span> <span class="n">QUOTE</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SymbolNode</span><span class="o">(</span><span class="s">"quote"</span><span class="o">);</span>
 
-<span class="kd">public</span> <span class="kd">static</span> <span class="n">Node</span> <span class="nf">check</span><span class="o">(</span><span class="n">TrufflerListNode</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">l</span> <span class="o">==</span> <span class="n">TrufflerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="n">Node</span> <span class="nf">check</span><span class="o">(</span><span class="n">MumblerListNode</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">l</span> <span class="o">==</span> <span class="n">MumblerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">return</span> <span class="n">l</span><span class="o">;</span>
     <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">l</span><span class="o">.</span><span class="na">car</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">DEFINE</span><span class="o">))</span> <span class="o">{</span>
         <span class="k">return</span> <span class="k">new</span> <span class="nf">DefineSpecialForm</span><span class="o">(</span><span class="n">l</span><span class="o">);</span>
@@ -701,7 +703,7 @@
 </td></tr></tbody></table>
 </div>
 
-<p>The Environment class is just a simple mapping between strings and objects. Because Truffler is lexically scoped, the Environment&rsquo;s parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.</p>
+<p>The Environment class is just a simple mapping between strings and objects. Because Mumbler is lexically scoped, the Environment&rsquo;s parent is searched if the name cannot be found. If the top parent is reached and the name is never found an exception is thrown.</p>
 
 <div class="brush: java">
  <table class="sourcetable">
@@ -767,7 +769,7 @@
 </td></tr></tbody></table>
 </div>
 
-<p><code>TrufflerListNode</code> is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective <code>eval</code> methods. The first element is then cast to a <code>Function</code> and its <code>apply</code> method is called with the rest of the list elements passed as arguments.</p>
+<p><code>MumblerListNode</code> is evaluated as a function call. This means all elements of the list are first evaluated by calling their respective <code>eval</code> methods. The first element is then cast to a <code>Function</code> and its <code>apply</code> method is called with the rest of the list elements passed as arguments.</p>
 
 <div class="brush: java">
  <table class="sourcetable">
@@ -791,7 +793,7 @@
 14</pre></div></td>
     <td class="code">
      <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TrufflerListNode</span> <span class="kd">extends</span> <span class="n">Node</span> <span class="kd">implements</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="o">{</span>
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MumblerListNode</span> <span class="kd">extends</span> <span class="n">Node</span> <span class="kd">implements</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">&gt;</span> <span class="o">{</span>
     <span class="c1">// other code...</span>
 
     <span class="nd">@Override</span>
@@ -883,7 +885,7 @@
 
 <h3 id="special-form-evaluation">Special form evaluation</h3>
 
-<p>We&rsquo;ve covered how Truffler&rsquo;s basic datatypes are evaluated; all that&rsquo;s left are the few special cases: <code>define</code>, <code>lambda</code>, <code>if</code> and <code>quote</code>. Remember, in the <code>Reader</code> when we encounter list forms that have these special symbols as their first element we replace the whole TrufflerListNode object with a new <code>SpecialForm</code>. This way, when we <code>eval</code> them, we can have whatever we want happen. For example, <code>define</code> takes the third element (a value) and stores it in the current namespace under the name given in the second element.</p>
+<p>We&rsquo;ve covered how Mumbler&rsquo;s basic datatypes are evaluated; all that&rsquo;s left are the few special cases: <code>define</code>, <code>lambda</code>, <code>if</code> and <code>quote</code>. Remember, in the <code>Reader</code> when we encounter list forms that have these special symbols as their first element we replace the whole MumblerListNode object with a new <code>SpecialForm</code>. This way, when we <code>eval</code> them, we can have whatever we want happen. For example, <code>define</code> takes the third element (a value) and stores it in the current namespace under the name given in the second element.</p>
 
 <div class="brush: java">
  <table class="sourcetable">
@@ -907,7 +909,7 @@
     <td class="code">
      <div class="source">
       <pre><span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">DefineSpecialForm</span> <span class="kd">extends</span> <span class="n">SpecialForm</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="nf">DefineSpecialForm</span><span class="o">(</span><span class="n">TrufflerListNode</span> <span class="n">listNode</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="nf">DefineSpecialForm</span><span class="o">(</span><span class="n">MumblerListNode</span> <span class="n">listNode</span><span class="o">)</span> <span class="o">{</span>
         <span class="kd">super</span><span class="o">(</span><span class="n">listNode</span><span class="o">);</span>
     <span class="o">}</span>
 
@@ -916,7 +918,7 @@
         <span class="n">SymbolNode</span> <span class="n">sym</span> <span class="o">=</span> <span class="o">(</span><span class="n">SymbolNode</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">car</span><span class="o">;</span> <span class="c1">// 2nd element</span>
         <span class="n">env</span><span class="o">.</span><span class="na">putValue</span><span class="o">(</span><span class="n">sym</span><span class="o">.</span><span class="na">name</span><span class="o">,</span>
                 <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">car</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span><span class="n">env</span><span class="o">));</span> <span class="c1">// 3rd element</span>
-        <span class="k">return</span> <span class="n">TrufflerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">MumblerListNode</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
 </pre></div>
@@ -946,14 +948,14 @@
     <td class="code">
      <div class="source">
       <pre><span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">LambdaSpecialForm</span> <span class="kd">extends</span> <span class="n">SpecialForm</span> <span class="o">{</span>
-     <span class="kd">public</span> <span class="nf">LambdaSpecialForm</span><span class="o">(</span><span class="n">TrufflerListNode</span> <span class="n">paramsAndBody</span><span class="o">)</span> <span class="o">{</span>
+     <span class="kd">public</span> <span class="nf">LambdaSpecialForm</span><span class="o">(</span><span class="n">MumblerListNode</span> <span class="n">paramsAndBody</span><span class="o">)</span> <span class="o">{</span>
          <span class="kd">super</span><span class="o">(</span><span class="n">paramsAndBody</span><span class="o">);</span>
      <span class="o">}</span>
 
      <span class="nd">@Override</span>
      <span class="kd">public</span> <span class="n">Object</span> <span class="nf">eval</span><span class="o">(</span><span class="kd">final</span> <span class="n">Environment</span> <span class="n">parentEnv</span><span class="o">)</span> <span class="o">{</span>
-         <span class="kd">final</span> <span class="n">TrufflerListNode</span> <span class="n">formalParams</span> <span class="o">=</span> <span class="o">(</span><span class="n">TrufflerListNode</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">car</span><span class="o">;</span>
-         <span class="kd">final</span> <span class="n">TrufflerListNode</span> <span class="n">body</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">cdr</span><span class="o">;</span>
+         <span class="kd">final</span> <span class="n">MumblerListNode</span> <span class="n">formalParams</span> <span class="o">=</span> <span class="o">(</span><span class="n">MumblerListNode</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">car</span><span class="o">;</span>
+         <span class="kd">final</span> <span class="n">MumblerListNode</span> <span class="n">body</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">node</span><span class="o">.</span><span class="na">cdr</span><span class="o">.</span><span class="na">cdr</span><span class="o">;</span>
          <span class="k">return</span> <span class="k">new</span> <span class="nf">Function</span><span class="o">()</span> <span class="o">{</span> <span class="cm">/* function definition goes here */</span> <span class="o">};</span>
      <span class="o">}</span>
  <span class="o">}</span>
@@ -961,7 +963,7 @@
 </td></tr></tbody></table>
 </div>
 
-<p>The other <a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L63"><code>if</code></a> and <a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/node/SpecialForm.java#L83"><code>quote</code></a> special forms do what you expect. If you&rsquo;re interested, you can check out the code.</p>
+<p>The other <a href="https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/node/SpecialForm.java#L63"><code>if</code></a> and <a href="https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/node/SpecialForm.java#L83"><code>quote</code></a> special forms do what you expect. If you&rsquo;re interested, you can check out the code.</p>
 
 <h3 id="builtin-functions">Builtin Functions</h3>
 
@@ -1049,13 +1051,13 @@
 </td></tr></tbody></table>
 </div>
 
-<p>You get the idea. You can see the implementation of the other builtin functions on <a href="https://github.com/cesquivias/truffler/blob/master/simple/src/truffler/simple/env/BuiltinFn.java">GitHub</a>.</p>
+<p>You get the idea. You can see the implementation of the other builtin functions on <a href="https://github.com/cesquivias/mumbler/blob/master/simple/src/mumbler/simple/env/BuiltinFn.java">GitHub</a>.</p>
 
 <h2 id="print">Print</h2>
 
-<p>Rounding out the REPL, we print out the result. There&rsquo;s not much here. We just call <code>System.out.println</code> and that&rsquo;s that. Okay, there&rsquo;s one little catch. Since we use the empty list as Truffler&rsquo;s &ldquo;null&rdquo; value, we just don&rsquo;t print anything if that&rsquo;s what&rsquo;s returned in the REPL.</p>
+<p>Rounding out the REPL, we print out the result. There&rsquo;s not much here. We just call <code>System.out.println</code> and that&rsquo;s that. Okay, there&rsquo;s one little catch. Since we use the empty list as Mumbler&rsquo;s &ldquo;null&rdquo; value, we just don&rsquo;t print anything if that&rsquo;s what&rsquo;s returned in the REPL.</p>
 
-<h1 id="truffler-in-action">Truffler in action</h1>
+<h1 id="mumbler-in-action">Mumbler in action</h1>
 
 <p>Now that we have a language spec and an implementation we can take it for a spin. We would start with Hello World, but we didn&rsquo;t imlement strings! We&rsquo;ll do the next best thing and use symbols.</p>
 
@@ -1107,7 +1109,7 @@
 </td></tr></tbody></table>
 </div>
 
-<p>Great! We get the correct answer. We have a working program! As you can see, Truffler would be easier to read if it had nice sugar like a function-define, but we can get by without it.</p>
+<p>Great! We get the correct answer. We have a working program! As you can see, Mumbler would be easier to read if it had nice sugar like a function-define, but we can get by without it.</p>
 
 <h1 id="benchmarks">Benchmarks</h1>
 
@@ -1125,15 +1127,15 @@
     computation time: 16
     total time: 82</code></pre>
 
-<p>That&rsquo;s pretty fast. How does SimpleTruffler do?</p>
+<p>That&rsquo;s pretty fast. How does SimpleMumbler do?</p>
 
-<pre><code>    truffler
+<pre><code>    mumbler
     --------------
     1346269
     ('computation-time: 1502)
     total time: 1644</code></pre>
 
-<p>Ouch. Things aren&rsquo;t looking so hot for our little interpreter. It performs about 100x <em>slower</em> than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleTruffler doesn&rsquo;t have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?</p>
+<p>Ouch. Things aren&rsquo;t looking so hot for our little interpreter. It performs about 100x <em>slower</em> than Racket or Node.js. Now, both Racket and Node.js have JIT compilers and SimpleMumbler doesn&rsquo;t have any of that magic. What happens if we compare it to an interpreter with no JIT like CPython?</p>
 
 <pre><code>    py
     --------------
@@ -1141,13 +1143,13 @@
     computation time: 385
     total time: 400</code></pre>
 
-<p>Better. SimpleTruffler is only 4x slower than CPython. Not bad for a language quicky thrown together. CPython is written in C and has a bytecode interpreter that helps explain why it&rsquo;s faster than our little language.</p>
+<p>Better. SimpleMumbler is only 4x slower than CPython. Not bad for a language quicky thrown together. CPython is written in C and has a bytecode interpreter that helps explain why it&rsquo;s faster than our little language.</p>
 
 <p>I&rsquo;ll settle for fibonacci as a benchmark. Our terribly inefficient algorithm gives us plenty of avenues for improvement. We make a lot of function calls so if we improve that we should get a big speed up. Getting rid of boxed longs would really help.</p>
 
 <h2 id="algorithms--interpreter">Algorithms &gt; Interpreter</h2>
 
-<p>Out of curiosity, I converted the Truffler implementation to one that uses a much faster, linear algorithm.</p>
+<p>Out of curiosity, I converted the Mumbler implementation to one that uses a much faster, linear algorithm.</p>
 
 <div class="brush: scheme">
  <table class="sourcetable">
@@ -1183,17 +1185,17 @@
 
 <p>This version runs through the fibonacci numbers sequentially instead of blowing up exponentially. This is an example of <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1">linear recursion</a> vs <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2">tree recursion</a>. You can read <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2">SICP</a> for more info on this. So how does our smarter algorithm perform:</p>
 
-<pre><code>    truffler
+<pre><code>    mumbler
     --------------
     1346269
     ('computation-time: 8)
     total time: 169</code></pre>
 
-<p>Wow. Now that&rsquo;s an improvement. The algorithm chosen has much more to do with speed than the language implementation. In it&rsquo;s current state, SimpleTruffler could be &ldquo;good enough&rdquo; for many small tasks and give you reasonable speed. If you&rsquo;re writing a DSL to glue code written in other faster languages maybe a simple interpreter is all you need. But let&rsquo;s assume we&rsquo;re writing a general purpose language that needs faster function calls and numeric operations.</p>
+<p>Wow. Now that&rsquo;s an improvement. The algorithm chosen has much more to do with speed than the language implementation. In it&rsquo;s current state, SimpleMumbler could be &ldquo;good enough&rdquo; for many small tasks and give you reasonable speed. If you&rsquo;re writing a DSL to glue code written in other faster languages maybe a simple interpreter is all you need. But let&rsquo;s assume we&rsquo;re writing a general purpose language that needs faster function calls and numeric operations.</p>
 
 <h1 id="next-time">Next Time</h1>
 
-<p>We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we&rsquo;ll actually start looking at Truffle and begin migrating SimpleTruffler over to it. Maybe along the way we&rsquo;ll add some more benchmarks to get a better picture of our language&rsquo;s speed.</p>
+<p>We have a working language and we have some baseline numbers to see if Truffle improves on our dead-simple interpreter. Next time we&rsquo;ll actually start looking at Truffle and begin migrating SimpleMumbler over to it. Maybe along the way we&rsquo;ll add some more benchmarks to get a better picture of our language&rsquo;s speed.</p>
   <footer>
     <script type="text/javascript">
       !function(d,s,id){
