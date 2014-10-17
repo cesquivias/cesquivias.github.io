@@ -14,7 +14,7 @@ The first thing to keep in mind is there are two main parts to Truffle: the Java
 
     Graal (the new, experimental JIT compiler for the JVM) is designed recognize Truffle classes and its subclasses. These base classes are the essense of using Truffle and Graal. Without these you're not really using Truffle and therefore not taking advantage of Graal's JIT.
 
-    If you followed along with our simple interpreter of Truffler, you'll see analogues between Truffle's base classes and the ones created in SimpleTruffler. In many areas it'll be a simple translation to Truffle's version of base classes.
+    If you followed along with our simple interpreter of Truffler, you'll see analogues between Truffle's base classes and the ones created in SimpleMumbler. In many areas it'll be a simple translation to Truffle's version of base classes.
 
     Once we've extended Truffle's base classes Graal can start optimizing our language. It can do things like inlining code to eliminate function calls. It can also eliminate unncessary object creation in situations where it's not needed. Our simple interpreter isn't smart enough to optimize like that without much more work on our part.
 
@@ -144,5 +144,120 @@ public final class MumblerNull extends MumblerList {
     public static final MumblerNull EMPTY = new MumblerNull();
 
     private MumblerNull() {}
+}
+```
+
+With Mumber types defined and a `MumberTypes` class created Truffle now generates a `MumberTypesGen` class with all the type check/casting methods we'll need.
+
+
+Create Syntax Tree Using Truffle
+====================================
+
+Mumbler now has its types defined. Let's now define the nodes that will define its expressions.
+
+Defining the Base Node Class
+----------------------------
+
+In SimpleMumbler we created a base abstract class called `Node` that was extended by all the expression nodes the `Reader` created. Truffle has a base class you need to use for classes that make up your syntax tree: [`Node`](http://hg.openjdk.java.net/graal/graal/file/tip/graal/com.oracle.truffle.api/src/com/oracle/truffle/api/nodes/Node.java). Truffle still wants you to create your own root class that extends `Node` and will be extended by all your syntax nodes.
+
+```java
+public abstract class MumblerNode extends Node {
+    public abstract Object execute(VirtualFrame virtualFrame);
+}
+```
+
+`MumblerNode` will be the parent class for all nodes the reader will create for Mumbler. The method that all children must implement is called `execute`. We called the generic method `eval` in SimpleMumbler but it's typically called `execute` in Truffle so we'll stick with that practice.
+
+If we left `MumblerNode` like this things could work, but it would mean that every expression would have to return an `Object` instance. There's no place for primitive types to find a way through. We're back to having to use boxing/unboxing and casting. This is obviously unideal. We would like to have equivalent `execute` methods but with primitive return types. Unfortunately, Java doesn't have a way to differentiate methods by return type. Truffle has a way around this. We can create special `execute*` methods for every type our language defines. If we then annotate `MumblerNode` with `TypeSystemReference` and point it to `MumblerTypes` Truffle will see we have an execute method for each type and inline the faster method call. After creating special execute methods for each Mumbler type we get:
+
+```java
+
+@TypeSystemReference(MumblerTypes.class)
+@NodeInfo(description = "The abstract base node for all expressions")
+public abstract class MumblerNode extends Node {
+
+    public abstract Object execute(VirtualFrame virtualFrame);
+
+    public long executeLong(VirtualFrame virtualFame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.MUMBLERTYPES.expectLong(
+                this.execute(virtualFame));
+    }
+
+    public boolean executeBoolean(VirtualFrame virtualFrame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.MUMBLERTYPES.expectBoolean(
+                this.execute(virtualFrame));
+    }
+
+    public MumblerSymbol executeMumblerSymbol(VirtualFrame virtualFrame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.MUMBLERTYPES.expectMumblerSymbol(
+                this.execute(virtualFrame));
+    }
+
+    public MumblerFunction executeMumblerFunction(VirtualFrame virtualFrame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.MUMBLERTYPES.expectMumblerFunction(
+                this.execute(virtualFrame));
+    }
+
+    public MumblerNull executeMumblerNull(VirtualFrame virtualFrame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.MUMBLERTYPES.expectMumblerNull(
+                this.execute(virtualFrame));
+    }
+}
+```
+
+The specialized `MumblerNode` class has a lot more lines than the old one, but it's all pretty boilerplate. What it's basically saying is call the generic `execute` method and verify the return value is the type you expect. If the type is wrong, throw an UnexpectedResultException. If Graal knows a node is always returning a certain type (a `long` for example) then it will skip the slow, generic method and call the faster `executeLong` method. You'll have to define the faster `executeLong` method in your Node subclasses, but Truffle and Graal take care of the plumbing for you. Graal will throw away its optimized code and fallback on the generic `execute` method if the types change. You always get the correct result but now Graal can optimize primitive return types with a few extra lines of code.
+
+
+Simple Literal Nodes
+--------------------
+
+Now that we have a base expression node let's implement some concrete nodes. The simplest would be literal nodes for numbers and booleans.
+
+```java
+public class NumberNode extends MumblerNode {
+
+    private final long num;
+
+    public NumberNode(long num) {
+        this.num = num;
+    }
+
+    @Override
+    public Object execute(VirtualFrame virtualFrame) {
+        return this.num;
+    }
+
+    @Override
+    public long executeLong(VirtualFrame virtualFrame) {
+        return this.num;
+    }
+}
+```
+
+GraalMumbler's `NumberNode` is very similar to the SimpleMumbler's. We store the value of the number and return it when it's evaluated/executed (we'll call it "executed" in the future to be consistent). The only twist is the additional `executeLong` method. When Graal discovers that a NumberNode instance always returns a `long` (which should be quickly) it will start to use the unboxed `executeLong`. We can do the same with the `BooleanNode`.
+
+```java
+public class BooleanNode extends MumblerNode {
+
+    private final boolean bool;
+
+    public BooleanNode(boolean bool) {
+        this.bool = bool;
+    }
+
+    @Override
+    public Object execute(VirtualFrame virtualFrame) {
+        return this.bool;
+    }
+
+    @Override
+    public boolean executeBoolean(VirtualFrame virtualFrame) {
+        return this.bool;
+    }
 }
 ```

@@ -1136,7 +1136,7 @@
  &lt;li&gt;
   &lt;p&gt;Extend and use Truffle&amp;rsquo;s base classes.&lt;/p&gt;
   &lt;p&gt;Graal (the new, experimental JIT compiler for the JVM) is designed recognize Truffle classes and its subclasses. These base classes are the essense of using Truffle and Graal. Without these you&amp;rsquo;re not really using Truffle and therefore not taking advantage of Graal&amp;rsquo;s JIT.&lt;/p&gt;
-  &lt;p&gt;If you followed along with our simple interpreter of Truffler, you&amp;rsquo;ll see analogues between Truffle&amp;rsquo;s base classes and the ones created in SimpleTruffler. In many areas it&amp;rsquo;ll be a simple translation to Truffle&amp;rsquo;s version of base classes.&lt;/p&gt;
+  &lt;p&gt;If you followed along with our simple interpreter of Truffler, you&amp;rsquo;ll see analogues between Truffle&amp;rsquo;s base classes and the ones created in SimpleMumbler. In many areas it&amp;rsquo;ll be a simple translation to Truffle&amp;rsquo;s version of base classes.&lt;/p&gt;
   &lt;p&gt;Once we&amp;rsquo;ve extended Truffle&amp;rsquo;s base classes Graal can start optimizing our language. It can do things like inlining code to eliminate function calls. It can also eliminate unncessary object creation in situations where it&amp;rsquo;s not needed. Our simple interpreter isn&amp;rsquo;t smart enough to optimize like that without much more work on our part.&lt;/p&gt;&lt;/li&gt;
  &lt;li&gt;
   &lt;p&gt;Specify your languages types and provide type hints&lt;/p&gt;
@@ -1387,6 +1387,226 @@
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MumblerNull&lt;/span&gt; &lt;span class="n"&gt;EMPTY&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MumblerNull&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;MumblerNull&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;With Mumber types defined and a &lt;code&gt;MumberTypes&lt;/code&gt; class created Truffle now generates a &lt;code&gt;MumberTypesGen&lt;/code&gt; class with all the type check/casting methods we&amp;rsquo;ll need.&lt;/p&gt;
+
+&lt;h1 id="create-syntax-tree-using-truffle"&gt;Create Syntax Tree Using Truffle&lt;/h1&gt;
+
+&lt;p&gt;Mumbler now has its types defined. Let&amp;rsquo;s now define the nodes that will define its expressions.&lt;/p&gt;
+
+&lt;h2 id="defining-the-base-node-class"&gt;Defining the Base Node Class&lt;/h2&gt;
+
+&lt;p&gt;In SimpleMumbler we created a base abstract class called &lt;code&gt;Node&lt;/code&gt; that was extended by all the expression nodes the &lt;code&gt;Reader&lt;/code&gt; created. Truffle has a base class you need to use for classes that make up your syntax tree: &lt;a href="http://hg.openjdk.java.net/graal/graal/file/tip/graal/com.oracle.truffle.api/src/com/oracle/truffle/api/nodes/Node.java"&gt;&lt;code&gt;Node&lt;/code&gt;&lt;/a&gt;. Truffle still wants you to create your own root class that extends &lt;code&gt;Node&lt;/code&gt; and will be extended by all your syntax nodes.&lt;/p&gt;
+
+&lt;div class="brush: java"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt;1
+2
+3&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;abstract&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MumblerNode&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;Node&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;abstract&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;MumblerNode&lt;/code&gt; will be the parent class for all nodes the reader will create for Mumbler. The method that all children must implement is called &lt;code&gt;execute&lt;/code&gt;. We called the generic method &lt;code&gt;eval&lt;/code&gt; in SimpleMumbler but it&amp;rsquo;s typically called &lt;code&gt;execute&lt;/code&gt; in Truffle so we&amp;rsquo;ll stick with that practice.&lt;/p&gt;
+
+&lt;p&gt;If we left &lt;code&gt;MumblerNode&lt;/code&gt; like this things could work, but it would mean that every expression would have to return an &lt;code&gt;Object&lt;/code&gt; instance. There&amp;rsquo;s no place for primitive types to find a way through. We&amp;rsquo;re back to having to use boxing/unboxing and casting. This is obviously unideal. We would like to have equivalent &lt;code&gt;execute&lt;/code&gt; methods but with primitive return types. Unfortunately, Java doesn&amp;rsquo;t have a way to differentiate methods by return type. Truffle has a way around this. We can create special &lt;code&gt;execute*&lt;/code&gt; methods for every type our language defines. If we then annotate &lt;code&gt;MumblerNode&lt;/code&gt; with &lt;code&gt;TypeSystemReference&lt;/code&gt; and point it to &lt;code&gt;MumblerTypes&lt;/code&gt; Truffle will see we have an execute method for each type and inline the faster method call. After creating special execute methods for each Mumbler type we get:&lt;/p&gt;
+
+&lt;div class="brush: java"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt; 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="nd"&gt;@TypeSystemReference&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MumblerTypes&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@NodeInfo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;description&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;"The abstract base node for all expressions"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;abstract&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MumblerNode&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;Node&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;abstract&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="nf"&gt;executeLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;UnexpectedResultException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;MumblerTypesGen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;MUMBLERTYPES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;expectLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;virtualFame&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;executeBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;UnexpectedResultException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;MumblerTypesGen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;MUMBLERTYPES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;expectBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;MumblerSymbol&lt;/span&gt; &lt;span class="nf"&gt;executeMumblerSymbol&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;UnexpectedResultException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;MumblerTypesGen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;MUMBLERTYPES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;expectMumblerSymbol&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;MumblerFunction&lt;/span&gt; &lt;span class="nf"&gt;executeMumblerFunction&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;UnexpectedResultException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;MumblerTypesGen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;MUMBLERTYPES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;expectMumblerFunction&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;MumblerNull&lt;/span&gt; &lt;span class="nf"&gt;executeMumblerNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;UnexpectedResultException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;MumblerTypesGen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;MUMBLERTYPES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;expectMumblerNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The specialized &lt;code&gt;MumblerNode&lt;/code&gt; class has a lot more lines than the old one, but it&amp;rsquo;s all pretty boilerplate. What it&amp;rsquo;s basically saying is call the generic &lt;code&gt;execute&lt;/code&gt; method and verify the return value is the type you expect. If the type is wrong, throw an UnexpectedResultException. If Graal knows a node is always returning a certain type (a &lt;code&gt;long&lt;/code&gt; for example) then it will skip the slow, generic method and call the faster &lt;code&gt;executeLong&lt;/code&gt; method. You&amp;rsquo;ll have to define the faster &lt;code&gt;executeLong&lt;/code&gt; method in your Node subclasses, but Truffle and Graal take care of the plumbing for you. Graal will throw away its optimized code and fallback on the generic &lt;code&gt;execute&lt;/code&gt; method if the types change. You always get the correct result but now Graal can optimize primitive return types with a few extra lines of code.&lt;/p&gt;
+
+&lt;h2 id="simple-literal-nodes"&gt;Simple Literal Nodes&lt;/h2&gt;
+
+&lt;p&gt;Now that we have a base expression node let&amp;rsquo;s implement some concrete nodes. The simplest would be literal nodes for numbers and booleans.&lt;/p&gt;
+
+&lt;div class="brush: java"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt; 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;NumberNode&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;MumblerNode&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;NumberNode&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;num&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;num&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="nf"&gt;executeLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;num&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;p&gt;GraalMumbler&amp;rsquo;s &lt;code&gt;NumberNode&lt;/code&gt; is very similar to the SimpleMumbler&amp;rsquo;s. We store the value of the number and return it when it&amp;rsquo;s evaluated/executed (we&amp;rsquo;ll call it &amp;ldquo;executed&amp;rdquo; in the future to be consistent). The only twist is the additional &lt;code&gt;executeLong&lt;/code&gt; method. When Graal discovers that a NumberNode instance always returns a &lt;code&gt;long&lt;/code&gt; (which should be quickly) it will start to use the unboxed &lt;code&gt;executeLong&lt;/code&gt;. We can do the same with the &lt;code&gt;BooleanNode&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class="brush: java"&gt;
+ &lt;table class="sourcetable"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td class="linenos"&gt;
+     &lt;div class="linenodiv"&gt;
+      &lt;pre&gt; 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;
+    &lt;td class="code"&gt;
+     &lt;div class="source"&gt;
+      &lt;pre&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;BooleanNode&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;MumblerNode&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;bool&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;BooleanNode&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;bool&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;bool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;bool&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;bool&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;executeBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;VirtualFrame&lt;/span&gt; &lt;span class="n"&gt;virtualFrame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;bool&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
