@@ -100,6 +100,279 @@
 <p>Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. Oracle labs has <a href="http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html">released its own VM</a> that hopes to make writing language interpreters both easy and fast. It can also leverage the huge ecosystem of the Java Virtual Machine (JVM). This modified JVM contains a new Just-In-Time (JIT) compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal&rsquo;s JIT-y goodness you use the Truffle library to annotate your interpreter and give Graal some hints on invariants and type information. For this integration effort you get significant speedups in your interpreter without having to resort to writing a bytecode compiler plus you have the full power of Java at your disposal.</p>
 <footer class="read-more"><a href="/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/">&hellip;more&hellip;</a></footer>
 </article>
+<article>
+  <header>
+    <h2><a href='/blog/2014/10/13/creating-a-language-in-truffle-part-2/'>Creating a Language in Truffle: Part 2</a></h2>
+    <p class='date-and-tags'>
+<time datetime="2014-10-13" pubdate="true">2014-10-13</time> :: <span class="tags"><a href="/tags/java.html">java</a>, <a href="/tags/truffle.html">truffle</a>, <a href="/tags/tutorial.html">tutorial</a></span></p>
+  </header>
+
+<p>Now that I&rsquo;ve have defined my Truffler language and have a base implementation I can start making it fast. It&rsquo;s time to delve into Truffler&rsquo;s library and use it&rsquo;s APIs to make Truffler faster.</p>
+
+<h1 id="getting-started-with-truffle">Getting Started with Truffle</h1>
+
+<p>The first thing to keep in mind is there are two main parts to Truffle: the Java APIs we call and extend which is called Truffle and the new JIT compiler added to the JVM called Graal. Graal is aware of Truffle classes and knows how to optimize the code. Truffle is still in its early stages of public availability. The documentation is sparse. The best way to learn about Truffle to watch <a href="https://www.youtube.com/watch?v=N_sOxGkZfTg">YouTube video tutorials</a> and to read through the sample <a href="http://hg.openjdk.java.net/graal/graal/file/tip/graal/com.oracle.truffle.sl/src/com/oracle/truffle/sl">SimpleLanguage source code</a>. There are three main ways to use Truffle to speed up your interpreter.</p>
+
+<ul>
+ <li>
+  <p>Extend and use Truffle&rsquo;s base classes.</p>
+  <p>Graal (the new, experimental JIT compiler for the JVM) is designed recognize Truffle classes and its subclasses. These base classes are the essense of using Truffle and Graal. Without these you&rsquo;re not really using Truffle and therefore not taking advantage of Graal&rsquo;s JIT.</p>
+  <p>If you followed along with our simple interpreter of Truffler, you&rsquo;ll see analogues between Truffle&rsquo;s base classes and the ones created in SimpleTruffler. In many areas it&rsquo;ll be a simple translation to Truffle&rsquo;s version of base classes.</p>
+  <p>Once we&rsquo;ve extended Truffle&rsquo;s base classes Graal can start optimizing our language. It can do things like inlining code to eliminate function calls. It can also eliminate unncessary object creation in situations where it&rsquo;s not needed. Our simple interpreter isn&rsquo;t smart enough to optimize like that without much more work on our part.</p></li>
+ <li>
+  <p>Specify your languages types and provide type hints</p>
+  <p>Type information is a staple of speeding up interpreters and compilers and Graal is no different. Our simple interpreter is very dumb and slow about types. Everything is a java Object; even numbers and booleans. This means that any operation on numbers and booleans need to be boxed; furthermore, type checks and casts need to be peformed before doing actual primitive calculations.</p>
+  <p>Truffle has a way to declare your language datatypes. With this information,Truffle can create specialized eval functions (typically named &ldquo;execute&rdquo;) so no casting, boxing and unboxing is necessary. This will be a big speed boost.</p></li>
+ <li>
+  <p>Add more hints on invariants</p>
+  <p>Will that function definition never change? Will a variable be a given type for the forseeable future? Use Truffle&rsquo;s APIs to specify this information and Graal will use it to speed up execution in the ideal case. I probably won&rsquo;t take advantage of many of these features, but it&rsquo;s another way Truffle can help you speed up your language.</p></li></ul>
+
+<h1 id="defining-mumbler-types">Defining Mumbler Types</h1>
+
+<p>Truffler requires you define your types so that&rsquo;s the first thing we&rsquo;ll do. Create an abstract class and list out your language&rsquo;s types in an annotation. Truffle will generate a concrete class that creates type check methods for all your types plus casting methods. You can override define your own check or cast methods if you choose. Since a null value in Mumbler is just an empty MumblerList we&rsquo;ll write a custom check function to verify that.</p>
+
+<div class="brush: java">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="nd">@TypeSystem</span><span class="o">({</span><span class="kt">long</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="kt">boolean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MumblerFunction</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
+    <span class="n">MumblerSymbol</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MumblerList</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">MumblerTypes</span> <span class="o">{</span>
+    <span class="nd">@TypeCheck</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isMumblerNull</span><span class="o">(</span><span class="n">Object</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@TypeCast</span>
+    <span class="kd">public</span> <span class="n">MumblerNull</span> <span class="nf">asMumblerNull</span><span class="o">(</span><span class="n">Object</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">assert</span> <span class="k">this</span><span class="o">.</span><span class="na">isMumblerNull</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+
+<p>If you followed with <a href="/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/">part 1</a> you may notice that we have new classes like <code>MumblerSymbol</code> and <code>MumblerNull</code>. Truffle separates out a languages types from its syntax nodes. This means we&rsquo;ll have a lot more classes in our Graal-optimized version, but if gets us a speed boost and the separation is simple and clear it&rsquo;s worth it.</p>
+
+<p>You can also see we&rsquo;re using the primitive types <code>long</code> and <code>boolean</code>. Yay! No more boxing/unboxing or type checks/casts. When a node is a &ldquo;number&rdquo; it will really be a primitive Java long; the same for booleans. This is why separating out types from the execution nodes is so useful. Since we&rsquo;re not tacking on extra functionality onto numbers or booleans we can use the primitve types and get their speed.</p>
+
+<p>The implementation for our custom types is simple since they don&rsquo;t contain anything advanced. A <code>MumblerSymbol</code> is nothing more than a name.</p>
+
+<div class="brush: java">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre>1
+2
+3
+4
+5
+6
+7</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MumblerSymbol</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">MumblerSymbol</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+
+<p>Similarly, <code>MumblerFunction</code> just holds onto the top node of the function that will eventually be called. Truffle&rsquo;s root node is called <code>RootCallTarget</code>.</p>
+
+<div class="brush: java">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre>1
+2
+3
+4
+5
+6
+7</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MumblerFunction</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">RootCallTarget</span> <span class="n">callTarget</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">MumblerFunction</span><span class="o">(</span><span class="n">RootCallTarget</span> <span class="n">callTarget</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">callTarget</span> <span class="o">=</span> <span class="n">callTarget</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+
+<p><code>MumblerList</code> is a little more advanced since it implements a linked a list, but it&rsquo;s the same code that was in SimpleMumbler&rsquo;s MumblerListNode without the <code>eval</code> method.</p>
+
+<div class="brush: java">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MumblerList</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">car</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">MumblerList</span> <span class="n">cdr</span><span class="o">;</span>
+
+    <span class="kd">protected</span> <span class="nf">MumblerList</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">car</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">cdr</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="nf">MumblerList</span><span class="o">(</span><span class="n">Object</span> <span class="n">car</span><span class="o">,</span> <span class="n">MumblerList</span> <span class="n">cdr</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">car</span> <span class="o">=</span> <span class="n">car</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">cdr</span> <span class="o">=</span> <span class="n">cdr</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">MumblerList</span> <span class="nf">list</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">objs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">list</span><span class="o">(</span><span class="n">asList</span><span class="o">(</span><span class="n">objs</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">MumblerList</span> <span class="nf">list</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">objs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">MumblerList</span> <span class="n">l</span> <span class="o">=</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">objs</span><span class="o">.</span><span class="na">size</span><span class="o">()-</span><span class="mi">1</span><span class="o">;</span> <span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">--)</span> <span class="o">{</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">cons</span><span class="o">(</span><span class="n">objs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">l</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">MumblerList</span> <span class="nf">cons</span><span class="o">(</span><span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">MumblerList</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kt">long</span> <span class="n">len</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="n">MumblerList</span> <span class="n">l</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">cdr</span><span class="o">;</span>
+        <span class="k">while</span> <span class="o">(</span><span class="n">l</span> <span class="o">!=</span> <span class="n">MumblerNull</span><span class="o">.</span><span class="na">EMPTY</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">len</span><span class="o">++;</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">cdr</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">len</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">other</span><span class="o">)</span> <span class="o">{</span> <span class="cm">/* boring */</span> <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span> <span class="cm">/* boring */</span> <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+
+<p>We dropped the generic declarations since we won&rsquo;t be using this data structure to represent Mumbler programs. We won&rsquo;t be programming using this within Java but in our dynamically typed Mumbler language so the generic declarations would just be noise.</p>
+
+<p><code>MumblerNull</code> is just a singleton subclass of <code>MumblerList</code>. Any empty <code>MumblerList</code> must be a reference to the singleton&mdash;even the final element in all <code>MumblerList</code> lists.</p>
+
+<div class="brush: java">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre>1
+2
+3
+4
+5
+6</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">MumblerNull</span> <span class="kd">extends</span> <span class="n">MumblerList</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">MumblerNull</span> <span class="n">EMPTY</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MumblerNull</span><span class="o">();</span>
+
+    <span class="kd">private</span> <span class="nf">MumblerNull</span><span class="o">()</span> <span class="o">{}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+</article>
 <footer>
  <ul class="pagination">
   <li class="disabled"><a href="#">
