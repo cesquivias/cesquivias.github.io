@@ -1,4 +1,4 @@
-    Title: Creating a Language in Truffle: Part 2
+    Title: Writing a Language in Truffle: Part 2
     Date: 2014-10-13T17:28:12
     Tags: java, truffle, tutorial
 
