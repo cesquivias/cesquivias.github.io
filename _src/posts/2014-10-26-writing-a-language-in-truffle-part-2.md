@@ -493,3 +493,152 @@ The last bit of Truffle magic added is the `ConditionProfile` object. Truffle ca
 
 
 ### LambdaNode
+
+Creating our lambda node will be a little trickier, but we can split up the work into muptiple classes to make each more understandable. The main `LambdaNode` class will focus on body of our function. It will execute each child node and then return the last one's value.
+
+```java
+
+public class LambdaNode extends MumblerNode {
+    @Children private final MumblerNode[] bodyNodes;
+
+    private LambdaNode(MumblerNode[] bodyNodes) {
+        this.bodyNodes = bodyNodes;
+    }
+
+    @Override
+    @ExplodeLoop
+    public Object execute(VirtualFrame virtualFrame) {
+        int secondToLast = this.bodyNodes.length - 2;
+        for (int i=0; i<secondToLast; i++) {
+            this.bodyNodes[i].execute(virtualFrame);
+        }
+        return this.bodyNodes[secondToLast + 1].execute(virtualFrame);
+    }
+}
+```
+
+There's nothing new in this version that we haven't seen before. You may notice our constructor is set to `private`. More on that later. The lambda node's children are kept in the `bodyNodes` field which is annotated with `@Children` so Truffle knows. `execute` goes through every node in the body and calls the node's respective `execute` method. We call the last node and return its value. We annotate `execute` with `@ExplodeLoop` because we're iterating over all nodes in the array we annotated earlier with `@Children`. That's basically it; nothing too scary and complicated. If you think about it, you may realize we haven't handled the arguments a lambda may define.
+
+We separate the handling of arguments into a separate node class. This class will have the sole purpose of executing a specific argument and giving us its value.
+
+```java
+public class ReadArgumentNode extends MumblerNode {
+    private final int index;
+
+    public ReadArgumentNode(int index) {
+        this.index = index;
+    }
+
+    @Override
+    public Object execute(VirtualFrame virtualFrame) {
+        Object[] args = virtualFrame.getArguments();
+        if (this.index < args.length) {
+            return args[this.index];
+        }
+        throw new IllegalArgumentException("Function needs argument number " + this.index);
+    }
+}
+```
+
+`ReadArgumentNode` is much simpler than `LambdaNode`. There are no Truffle annotations. We just get the array of arguments from the current `VirtualFrame` and then return the value stored in that array. If we don't send the proper number of arguments we throw an `IllegalArgumentException`.
+
+With `ReadArgumentNode` we can now get the value of the argument sent to our lambda function, but we still need to put it in the lambda's `Frame` (i.e., namespace). We'll reuse our `DefineNode` to do the heavy lifting. There's no need for a whole new class for this. We'll just create a utility method.
+
+```java
+public static DefineNode addFormalParameter(int index, FrameSlot frameSlot) {
+    return DefineNodeFactory.create(new ReadArgumentNode(index), frameSlot);
+}
+```
+
+So now we have a way of putting argument values into the lambda `Frame` and we have a way to execute the body of the lambda. We just need to tie these two pieces. We'll just prepend the body defined in the Mumbler file with our define nodes. The new list of define nodes and old lambda body nodes will be our *new* body nodes. We'll create another utility method for this.
+
+```java
+public static LambdaNode lambda(FrameSlot[] formalParameters,
+        MumblerNode[] bodyNodes) {
+    MumblerNode[] allBodyNodes = new MumblerNode[formalParameters.length
+                                                 + bodyNodes.length];
+    for (int i=0; i<formalParameters.length; i++) {
+        allBodyNodes[i] = addFormalParameter(i, formalParameters[i]);
+    }
+    System.arraycopy(bodyNodes, 0, allBodyNodes, formalParameters.length,
+            bodyNodes.length);
+
+    return new LambdaNode(allBodyNodes);
+}
+```
+
+This static method will be how our reader will create instances of `LambdaNode`. This is why the `LambdaNode` constructor is private.
+
+
+### QuoteNode
+
+Rounding our special form definitions is our implementation of `quote`. If you remember, `quote` just returns the value of the data type passed to it without evaluation. The implementation was very simple in SimpleMumbler. Because the AST tree and the Mumbler data types are now separate from each other, GraalMumbler's implementation will be slightly more complicated, but there's nothing to worry about. `QuoteNode` doesn't contain anything we haven't seen before.
+
+```java
+
+@NodeChild("literalNode")
+@NodeField(name = "kind", type = QuoteKind.class)
+public abstract class QuoteNode extends MumblerNode {
+    public static enum QuoteKind {
+        LONG,
+        BOOLEAN,
+        SYMBOL,
+        LIST
+    }
+
+    protected abstract QuoteKind getKind();
+
+    @Specialization(guards = "isLongKind")
+    protected long quoteLong(VirtualFrame virtualFrame, long value) {
+        return value;
+    }
+
+    @Specialization(guards = "isBooleanKind")
+    protected boolean quoteBoolean(VirtualFrame virtualFrame, boolean value) {
+        return value;
+    }
+
+    @Specialization(contains = {"quoteLong", "quoteBoolean"})
+    protected Object quote(VirtualFrame virtualFrame, Object value) {
+        return value;
+    }
+
+    protected boolean isLongKind() {
+        return this.getKind() == QuoteKind.LONG;
+    }
+
+    protected boolean isBooleanKind() {
+        return this.getKind() == QuoteKind.BOOLEAN;
+    }
+}
+```
+
+The structure of `QuoteNode` is very similar to `DefineNode` class. We keep track of what "kind" of value `QuoteNode` will return so we can call the properly typed method. The Truffle DSL takes care of calling the child and dispatching to the proper `quote` method. Because we have a child node of `QuoteNode` that will return the value, we need to have `MumblerNode` subclasses for literal `MumblerSymbol` and `MumblerList` types. That won't be too hard. All we have to do is create a node that returns constant value when `execute` is called. Here's the implementation of `LiteralSymbolNode`.
+
+```java
+public class LiteralSymbolNode extends MumblerNode {
+    private final MumblerSymbol symbol;
+
+    public LiteralSymbolNode(MumblerSymbol symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public Object execute(VirtualFrame virtualFrame) {
+        return this.symbol;
+    }
+
+    @Override
+    public MumblerSymbol executeMumblerSymbol(VirtualFrame virtualFrame) {
+        return this.symbol;
+    }
+}
+```
+
+It's just like `NumberNode` or `BooleanNode` we saw earlier. I'll skip `LiteralListNode` since it looks exactly the same.
+
+
+Builtin Functions
+-----------------
+
+We're in the homestretch of GraalMumbler nodes. We have all the nodes we need to have a working language, but we need a base from which to build. We need our builtin functions.
