@@ -1,3 +1,3 @@
+http://cesquivias.github.io/blog/2014/12/02/writing-a-language-in-truffle-part-2-using-truffle-and-graal/
 http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/
-http://cesquivias.github.io/blog/2014/10/13/creating-a-language-in-truffle-part-2/
 http://cesquivias.github.io/About.html
