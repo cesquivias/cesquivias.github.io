@@ -252,7 +252,7 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
 &lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
 &lt;/div&gt;
 
-&lt;p&gt;The important piece is the annotation we add to our class. This lists out all our types. Keep in mind that order matters. Graal will go down the list in order and return the first datatype that succeeds. So, for example, if we had arbitrarily long numbers using &lt;code&gt;BigInteger&lt;/code&gt; we want to make sure that comes &lt;em&gt;after&lt;/em&gt; &lt;code&gt;long&lt;/code&gt; or else &lt;code&gt;BigInteger&lt;/code&gt; would be tried first and always return. We would never get the benefits of primite types for smaller numbers.&lt;/p&gt;
+&lt;p&gt;The important piece is the annotation we add to our class. This lists out all our types. Keep in mind that order matters. Graal will go down the list in order and return the first datatype that succeeds. So, for example, if we had arbitrarily long numbers using &lt;code&gt;BigInteger&lt;/code&gt; we want to make sure that comes &lt;em&gt;after&lt;/em&gt; &lt;code&gt;long&lt;/code&gt; or else &lt;code&gt;BigInteger&lt;/code&gt; would be tried first and always return. We would never get the benefits of primitive types for smaller numbers.&lt;/p&gt;
 
 &lt;p&gt;In more complex languages the class could contain methods to handle conversion between one type to another. If we utilized &lt;code&gt;BigInteger&lt;/code&gt; like I mentioned we could have a cast method to convert &lt;code&gt;long&lt;/code&gt; to &lt;code&gt;BigInteger&lt;/code&gt;. We could also specify our own type checks to check if a given &lt;code&gt;Object&lt;/code&gt; is a certain type. We would use this if we had a null type, but since we&amp;rsquo;re using an empty list as null we&amp;rsquo;re not going to implement that.&lt;/p&gt;
 
@@ -815,7 +815,7 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;There a couple of elements in the class that probably look unfamiliar. First, we mark our fieds with the &lt;code&gt;@Child&lt;/code&gt; and &lt;code&gt;@Children&lt;/code&gt; annotations. This tells truffle that these fields are special. They are sub-nodes of our AST. This additional information will help with automatic tree rewriting at runtime. It doesn&amp;rsquo;t really affect the code we write but should help with runtime performance. I also annotate &lt;code&gt;execute&lt;/code&gt; with &lt;code&gt;@ExplodeLoop&lt;/code&gt; loop for the same reason. This annotation tells Truffle that when it compiles this method it can unroll the &lt;code&gt;for&lt;/code&gt; loop since the number of iterations in the loop will not change. The call to &lt;code&gt;CompilerAsserts.compilationConstant&lt;/code&gt; further confirms that. The code is simple and only contains a few extra lines to help Truffle gather more information about our language characteristics.&lt;/p&gt;
 
-&lt;p&gt;I kept the code simple because Mumbler&amp;rsquo;s function lookup is simple. In other languages with more complicated method lookup like Java (is this method an instance method, static method, the parent&amp;rsquo;s instance method&amp;hellip;?) the function/method that is ultimately called could be much more complicated. We have to worry about any of that in Mumbler, but it&amp;rsquo;s something to keep in mind if you write languages that have classes (e.g., Ruby) or inheritence (e.g., Javascript).&lt;/p&gt;
+&lt;p&gt;I kept the code simple because Mumbler&amp;rsquo;s function lookup is simple. In other languages with more complicated method lookup like Java (is this method an instance method, static method, the parent&amp;rsquo;s instance method&amp;hellip;?) the function/method that is ultimately called could be much more complicated. We have to worry about any of that in Mumbler, but it&amp;rsquo;s something to keep in mind if you write languages that have classes (e.g., Ruby) or inheritance (e.g., Javascript).&lt;/p&gt;
 
 &lt;p&gt;We create an IndirectCallNode and then call it with our scope (&lt;code&gt;VirtualFrame&lt;/code&gt;), the function (the call target since that&amp;rsquo;s the important part) and our arguments. There is a &lt;code&gt;DirectCallNode&lt;/code&gt; we could use. Truffle could make more optimizations since a &lt;code&gt;DirectCallNode&lt;/code&gt; assumes the function reference will not change. That would require more bookkeeping and rolling back or updating if that assumption becomes invalid. For the moment I&amp;rsquo;ll stick with &lt;code&gt;IndirectCallNode&lt;/code&gt; and come back to later if we need to speed up Mumbler in the future.&lt;/p&gt;
 
@@ -825,7 +825,7 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id="ifnode"&gt;&lt;code&gt;IfNode&lt;/code&gt;&lt;/h2&gt;
 
-&lt;p&gt;There shouldn&amp;rsquo;t be anything that surprises you in our implemention of &lt;code&gt;if&lt;/code&gt;. You&amp;rsquo;ve seen all the pieces. Our &lt;code&gt;IfNode&lt;/code&gt; will have 3 sub-nodes: the test node, the then node and the else node. We&amp;rsquo;ll execute the test node and if it returns false or an empty list, we&amp;rsquo;ll execute the else node or else we execute the then node. Let&amp;rsquo;s do this.&lt;/p&gt;
+&lt;p&gt;There shouldn&amp;rsquo;t be anything that surprises you in our implementation of &lt;code&gt;if&lt;/code&gt;. You&amp;rsquo;ve seen all the pieces. Our &lt;code&gt;IfNode&lt;/code&gt; will have 3 sub-nodes: the test node, the then node and the else node. We&amp;rsquo;ll execute the test node and if it returns false or an empty list, we&amp;rsquo;ll execute the else node or else we execute the then node. Let&amp;rsquo;s do this.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -1535,9 +1535,9 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Our &lt;code&gt;Reader&lt;/code&gt; needs to make a big change. Instead of returning our Mumbler data types it now has to return Truffle nodes. We also need to add one important feature. We need a new &lt;code&gt;FrameDescriptor&lt;/code&gt; object whenever we enter a new scope. That means when we see a &lt;code&gt;lambda&lt;/code&gt; we need to create a new &lt;code&gt;FrameDescriptor&lt;/code&gt; object and get all our &lt;code&gt;FrameSlot&lt;/code&gt; objects from that. The tracking of the current &lt;code&gt;FrameDescriptor&lt;/code&gt; won&amp;rsquo;t be very hard. We&amp;rsquo;ll just create a &lt;code&gt;Stack&lt;/code&gt; data structure and push/pop frame descriptors as we enter/exit &lt;code&gt;lambda&lt;/code&gt; bodies. The bigger issue is this will complicate reading lists since we have to do something special for &lt;code&gt;lambda&lt;/code&gt;s.&lt;/p&gt;
 
-&lt;p&gt;So how do we make these changes? Well, let&amp;rsquo;s not forget we have a working &lt;code&gt;Reader&lt;/code&gt; from our simple interpreter. Why not just repurpose our existing reader and convert every datatype to its matching Truffle node. Our literal &lt;code&gt;long&lt;/code&gt; and &lt;code&gt;boolean&lt;/code&gt; nodes will be simple conversions, and symbols shouldn&amp;rsquo;t be too hard (as long as we have our frame descriptor stack working).&lt;/p&gt;
+&lt;p&gt;So how do we make these changes? Well, let&amp;rsquo;s not forget we have a working &lt;code&gt;Reader&lt;/code&gt; from our simple interpreter. Why not just re-purpose our existing reader and convert every datatype to its matching Truffle node. Our literal &lt;code&gt;long&lt;/code&gt; and &lt;code&gt;boolean&lt;/code&gt; nodes will be simple conversions, and symbols shouldn&amp;rsquo;t be too hard (as long as we have our frame descriptor stack working).&lt;/p&gt;
 
-&lt;p&gt;So how do we update our &lt;code&gt;Reader&lt;/code&gt; class and make minimal modifcations to working code? I&amp;rsquo;ll add a conversion process after the reader step. The &lt;code&gt;Reader&lt;/code&gt; returns our Mumbler data structures but we wrapp them in a class that&amp;rsquo;ll do the conversion. The wrapper classes will implement a simple interface.&lt;/p&gt;
+&lt;p&gt;So how do we update our &lt;code&gt;Reader&lt;/code&gt; class and make minimal modifcations to working code? I&amp;rsquo;ll add a conversion process after the reader step. The &lt;code&gt;Reader&lt;/code&gt; returns our Mumbler data structures but we wrap them in a class that&amp;rsquo;ll do the conversion. The wrapper classes will implement a simple interface.&lt;/p&gt;
 
 &lt;div class="brush: java"&gt;
  &lt;table class="sourcetable"&gt;
@@ -1885,7 +1885,7 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;So it took about a second and half to compute the 30th element of the fibonacci sequence with our inefficient algorithm.&lt;/p&gt;
 
-&lt;p&gt;Let&amp;rsquo;s take that fibonacci implentation and run it with our new Truffle interpreter. I used the &lt;code&gt;-server&lt;/code&gt; flag when running the Graal VM (command: &lt;code&gt;&amp;lt;path-to-graal-vm&amp;gt; -server -jar &amp;lt;my-vm-jar&amp;gt; &amp;lt;path-to-script&amp;gt;&lt;/code&gt;) The median speed over 5 runs.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s take that fibonacci implementation and run it with our new Truffle interpreter. I used the &lt;code&gt;-server&lt;/code&gt; flag when running the Graal VM (command: &lt;code&gt;&amp;lt;path-to-graal-vm&amp;gt; -server -jar &amp;lt;my-vm-jar&amp;gt; &amp;lt;path-to-script&amp;gt;&lt;/code&gt;) The median speed over 5 runs.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;    mumbler (truffle)
     --------------
@@ -1893,7 +1893,7 @@ $ mx --vm server --vmbuild product build&lt;/code&gt;&lt;/pre&gt;
     ('computation-time: 6348)
     total time: 7874&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Ouch. That&amp;rsquo;s a helluva jump. Now, we didn&amp;rsquo;t utilize all of Truffle&amp;rsquo;s capabilities, but I wasn&amp;rsquo;t expecting such a huge jump. That&amp;rsquo;s almost an 5x &lt;strong&gt;slowdown&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Ouch. That&amp;rsquo;s a helluva jump. Now, we didn&amp;rsquo;t utilize all of Truffle&amp;rsquo;s capabilities, but I wasn&amp;rsquo;t expecting such a huge jump. That&amp;rsquo;s almost a 5x &lt;strong&gt;slowdown&lt;/strong&gt;.&lt;/p&gt;
 
 &lt;p&gt;Did I do something seriously wrong? Well, Truffle comes with an example language implementation called Simple Language. That&amp;rsquo;s supposed to be a good starting point that uses most of Truffle&amp;rsquo;s tricks to speed up your interpreter. Let&amp;rsquo;s try that language out and see what we get. Here&amp;rsquo;s the code for Simple Language:&lt;/p&gt;
 

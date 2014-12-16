@@ -186,7 +186,7 @@ public abstract class MumblerTypes {
 }
 ```
 
-The important piece is the annotation we add to our class. This lists out all our types. Keep in mind that order matters. Graal will go down the list in order and return the first datatype that succeeds. So, for example, if we had arbitrarily long numbers using `BigInteger` we want to make sure that comes *after* `long` or else `BigInteger` would be tried first and always return. We would never get the benefits of primite types for smaller numbers.
+The important piece is the annotation we add to our class. This lists out all our types. Keep in mind that order matters. Graal will go down the list in order and return the first datatype that succeeds. So, for example, if we had arbitrarily long numbers using `BigInteger` we want to make sure that comes *after* `long` or else `BigInteger` would be tried first and always return. We would never get the benefits of primitive types for smaller numbers.
 
 In more complex languages the class could contain methods to handle conversion between one type to another. If we utilized `BigInteger` like I mentioned we could have a cast method to convert `long` to `BigInteger`. We could also specify our own type checks to check if a given `Object` is a certain type. We would use this if we had a null type, but since we're using an empty list as null we're not going to implement that.
 
@@ -512,7 +512,7 @@ At this point most of the code should look familiar. Our `InvokeNode` extends `M
 
 There a couple of elements in the class that probably look unfamiliar. First, we mark our fieds with the `@Child` and `@Children` annotations. This tells truffle that these fields are special. They are sub-nodes of our AST. This additional information will help with automatic tree rewriting at runtime. It doesn't really affect the code we write but should help with runtime performance. I also annotate `execute` with `@ExplodeLoop` loop for the same reason. This annotation tells Truffle that when it compiles this method it can unroll the `for` loop since the number of iterations in the loop will not change. The call to `CompilerAsserts.compilationConstant` further confirms that. The code is simple and only contains a few extra lines to help Truffle gather more information about our language characteristics.
 
-I kept the code simple because Mumbler's function lookup is simple. In other languages with more complicated method lookup like Java (is this method an instance method, static method, the parent's instance method...?) the function/method that is ultimately called could be much more complicated. We have to worry about any of that in Mumbler, but it's something to keep in mind if you write languages that have classes (e.g., Ruby) or inheritence (e.g., Javascript).
+I kept the code simple because Mumbler's function lookup is simple. In other languages with more complicated method lookup like Java (is this method an instance method, static method, the parent's instance method...?) the function/method that is ultimately called could be much more complicated. We have to worry about any of that in Mumbler, but it's something to keep in mind if you write languages that have classes (e.g., Ruby) or inheritance (e.g., Javascript).
 
 We create an IndirectCallNode and then call it with our scope (`VirtualFrame`), the function (the call target since that's the important part) and our arguments. There is a `DirectCallNode` we could use. Truffle could make more optimizations since a `DirectCallNode` assumes the function reference will not change. That would require more bookkeeping and rolling back or updating if that assumption becomes invalid. For the moment I'll stick with `IndirectCallNode` and come back to later if we need to speed up Mumbler in the future.
 
@@ -525,7 +525,7 @@ We can now read variables and call functions. Let's round that out by implementi
 `IfNode`
 --------
 
-There shouldn't be anything that surprises you in our implemention of `if`. You've seen all the pieces. Our `IfNode` will have 3 sub-nodes: the test node, the then node and the else node. We'll execute the test node and if it returns false or an empty list, we'll execute the else node or else we execute the then node. Let's do this.
+There shouldn't be anything that surprises you in our implementation of `if`. You've seen all the pieces. Our `IfNode` will have 3 sub-nodes: the test node, the then node and the else node. We'll execute the test node and if it returns false or an empty list, we'll execute the else node or else we execute the then node. Let's do this.
 
 ```java
 
@@ -891,9 +891,9 @@ Update `Reader` to Return New Truffle Nodes
 
 Our `Reader` needs to make a big change. Instead of returning our Mumbler data types it now has to return Truffle nodes. We also need to add one important feature. We need a new `FrameDescriptor` object whenever we enter a new scope. That means when we see a `lambda` we need to create a new `FrameDescriptor` object and get all our `FrameSlot` objects from that. The tracking of the current `FrameDescriptor` won't be very hard. We'll just create a `Stack` data structure and push/pop frame descriptors as we enter/exit `lambda` bodies. The bigger issue is this will complicate reading lists since we have to do something special for `lambda`s.
 
-So how do we make these changes? Well, let's not forget we have a working `Reader` from our simple interpreter. Why not just repurpose our existing reader and convert every datatype to its matching Truffle node. Our literal `long` and `boolean` nodes will be simple conversions, and symbols shouldn't be too hard (as long as we have our frame descriptor stack working).
+So how do we make these changes? Well, let's not forget we have a working `Reader` from our simple interpreter. Why not just re-purpose our existing reader and convert every datatype to its matching Truffle node. Our literal `long` and `boolean` nodes will be simple conversions, and symbols shouldn't be too hard (as long as we have our frame descriptor stack working).
 
-So how do we update our `Reader` class and make minimal modifcations to working code? I'll add a conversion process after the reader step. The `Reader` returns our Mumbler data structures but we wrapp them in a class that'll do the conversion. The wrapper classes will implement a simple interface.
+So how do we update our `Reader` class and make minimal modifcations to working code? I'll add a conversion process after the reader step. The `Reader` returns our Mumbler data structures but we wrap them in a class that'll do the conversion. The wrapper classes will implement a simple interface.
 
 ```java
 interface Convertible {
@@ -1074,7 +1074,7 @@ As reminder, here's how our simple interpreter did last time:
 
 So it took about a second and half to compute the 30th element of the fibonacci sequence with our inefficient algorithm.
 
-Let's take that fibonacci implentation and run it with our new Truffle interpreter. I used the `-server` flag when running the Graal VM (command: `<path-to-graal-vm> -server -jar <my-vm-jar> <path-to-script>`) The median speed over 5 runs.
+Let's take that fibonacci implementation and run it with our new Truffle interpreter. I used the `-server` flag when running the Graal VM (command: `<path-to-graal-vm> -server -jar <my-vm-jar> <path-to-script>`) The median speed over 5 runs.
 
         mumbler (truffle)
         --------------
@@ -1082,7 +1082,7 @@ Let's take that fibonacci implentation and run it with our new Truffle interpret
         ('computation-time: 6348)
         total time: 7874
 
-Ouch. That's a helluva jump. Now, we didn't utilize all of Truffle's capabilities, but I wasn't expecting such a huge jump. That's almost an 5x **slowdown**.
+Ouch. That's a helluva jump. Now, we didn't utilize all of Truffle's capabilities, but I wasn't expecting such a huge jump. That's almost a 5x **slowdown**.
 
 Did I do something seriously wrong? Well, Truffle comes with an example language implementation called Simple Language. That's supposed to be a good starting point that uses most of Truffle's tricks to speed up your interpreter. Let's try that language out and see what we get. Here's the code for Simple Language:
 
