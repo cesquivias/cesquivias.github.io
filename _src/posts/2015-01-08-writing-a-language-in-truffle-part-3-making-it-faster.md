@@ -1,5 +1,5 @@
-    Title: Writing a Language in Truffle. Part 3: Making it Faster
-    Date: 2015-01-04T21:49:36
+    Title: Writing a Language in Truffle. Part 3: Making my Language (Much) Faster
+    Date: 2015-01-08T21:49:36
     Tags: java, truffle, tutorial
 
 After the last post, we have a working interpreter in Truffle (yay!), but the results weren't very exciting. Running our fibonacci benchmark we got a paltry 6.3 seconds execution time using TruffleMumbler. Perhaps we can do better.

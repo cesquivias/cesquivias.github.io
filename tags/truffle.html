@@ -88,6 +88,33 @@
 
           <article>
   <header>
+    <h2><a href='/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/'>Writing a Language in Truffle. Part 3: Making my Language (Much) Faster</a></h2>
+    <p class='date-and-tags'>
+<time datetime="2015-01-08" pubdate="true">2015-01-08</time> :: <span class="tags"><a href="/tags/java.html">java</a>, <a href="/tags/truffle.html">truffle</a>, <a href="/tags/tutorial.html">tutorial</a></span></p>
+  </header>
+
+<p>After the last post, we have a working interpreter in Truffle (yay!), but the results weren&rsquo;t very exciting. Running our fibonacci benchmark we got a paltry 6.3 seconds execution time using TruffleMumbler. Perhaps we can do better.</p>
+
+<p>With help from a couple of Truffle veterans, I was able to speed up my interpreter&rsquo;s speed. With a couple of key improvements and warming up the VM I was able to get the execution time down to 0.1 seconds. A 63x jump!</p>
+
+<p>Let&rsquo;s go through the changes I made to get such an improvement.</p>
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again-->
+
+<p><strong>Table of Contents</strong></p>
+
+<ul>
+ <li><a href="#warming-up-graal">Warming Up Graal</a></li>
+ <li><a href="#improving-variable-lookup">Improving Variable Lookup</a>
+  <ul>
+   <li><a href="#remember-scope-depth">Remember Scope Depth</a></li>
+   <li><a href="#direct-lookup-to-lexical-scope">Direct Lookup to Lexical Scope</a></li></ul></li>
+ <li><a href="#making-function-calls-faster">Making Function Calls Faster</a></li>
+ <li><a href="#conclusion">Conclusion</a></li></ul>
+<!-- markdown-toc end-->
+<footer class="read-more"><a href="/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/">&hellip;more&hellip;</a></footer>
+</article>
+<article>
+  <header>
     <h2><a href='/blog/2014/12/02/writing-a-language-in-truffle-part-2-using-truffle-and-graal/'>Writing a Language in Truffle. Part 2: Using Truffle and Graal</a></h2>
     <p class='date-and-tags'>
 <time datetime="2014-12-02" pubdate="true">2014-12-02</time> :: <span class="tags"><a href="/tags/java.html">java</a>, <a href="/tags/truffle.html">truffle</a>, <a href="/tags/tutorial.html">tutorial</a></span></p>
