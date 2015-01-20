@@ -4,9 +4,18 @@
   <title>Cristian Esquivias: Cristian Esquivias</title>
   <description>Cristian Esquivias: Cristian Esquivias</description>
   <link>http://cesquivias.github.io/index.html</link>
-  <lastBuildDate>Thu, 08 Jan 2015 21:49:36 PST</lastBuildDate>
-  <pubDate>Thu, 08 Jan 2015 21:49:36 PST</pubDate>
+  <lastBuildDate>Thu, 15 Jan 2015 14:25:32 PST</lastBuildDate>
+  <pubDate>Thu, 15 Jan 2015 14:25:32 PST</pubDate>
   <ttl>1800</ttl>
+  <item>
+   <title>Writing a Language in Truffle. Part 4: Adding Features the Truffle Way</title>
+   <link>http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/?utm_source=all&amp;utm_medium=RSS</link>
+   <guid>urn:http-cesquivias-github-io:-blog-2015-01-15-writing-a-language-in-truffle-part-4-adding-features-the-truffle-way</guid>
+   <pubDate>Thu, 15 Jan 2015 14:25:32 PST</pubDate>
+   <description>&lt;html&gt;
+&lt;p&gt;I ended &lt;a href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/"&gt;last time&lt;/a&gt; with a lisp that had the bare minimum of features and had a reached an acceptable speed. Now it&amp;rsquo;s time to make Mumbler a more useful languages with a couple of new features: arbitrary precision integers and&amp;mdash;what no lisp should be without&amp;mdash;tail call optimization.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t want to undo all the work it took to make Mumbler fast, so I&amp;rsquo;m going to show how Truffle can help to include these features and still keep the langauge fast.&lt;/p&gt;&lt;a href="http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/?utm_source=all&amp;amp;utm_medium=RSS"&gt;&lt;em&gt;More&amp;hellip;&lt;/em&gt;&lt;/a&gt;&lt;/html&gt;</description></item>
   <item>
    <title>Writing a Language in Truffle. Part 3: Making my Language (Much) Faster</title>
    <link>http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/?utm_source=all&amp;utm_medium=RSS</link>

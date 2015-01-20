@@ -4,7 +4,19 @@
  <link rel="self" href="http://cesquivias.github.io/feeds/truffle.atom.xml" />
  <link href="http://cesquivias.github.io/tags/truffle.html" />
  <id>urn:http-cesquivias-github-io:-tags-truffle-html</id>
- <updated>2015-01-08T21:49:36Z</updated>
+ <updated>2015-01-15T14:25:32Z</updated>
+ <entry>
+  <title type="text">Writing a Language in Truffle. Part 4: Adding Features the Truffle Way</title>
+  <link rel="alternate" href="http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/?utm_source=truffle&amp;utm_medium=Atom" />
+  <id>urn:http-cesquivias-github-io:-blog-2015-01-15-writing-a-language-in-truffle-part-4-adding-features-the-truffle-way</id>
+  <published>2015-01-15T14:25:32Z</published>
+  <updated>2015-01-15T14:25:32Z</updated>
+  <author>
+   <name>Cristian Esquivias</name></author>
+  <content type="html">&lt;html&gt;
+&lt;p&gt;I ended &lt;a href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/"&gt;last time&lt;/a&gt; with a lisp that had the bare minimum of features and had a reached an acceptable speed. Now it&amp;rsquo;s time to make Mumbler a more useful languages with a couple of new features: arbitrary precision integers and&amp;mdash;what no lisp should be without&amp;mdash;tail call optimization.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t want to undo all the work it took to make Mumbler fast, so I&amp;rsquo;m going to show how Truffle can help to include these features and still keep the langauge fast.&lt;/p&gt;&lt;a href="http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/?utm_source=truffle&amp;amp;utm_medium=Atom"&gt;&lt;em&gt;More&amp;hellip;&lt;/em&gt;&lt;/a&gt;&lt;/html&gt;</content></entry>
  <entry>
   <title type="text">Writing a Language in Truffle. Part 3: Making my Language (Much) Faster</title>
   <link rel="alternate" href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/?utm_source=truffle&amp;utm_medium=Atom" />
