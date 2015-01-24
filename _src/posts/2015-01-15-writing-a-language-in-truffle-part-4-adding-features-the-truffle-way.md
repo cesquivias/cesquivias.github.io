@@ -11,7 +11,7 @@ I don't want to undo all the work it took to make Mumbler fast, so I'm going to 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again -->
 **Table of Contents**
 
-- [Arbitrary Precision Arithmetic](./#arbitrary-precision-arithmetic)
+- [Arbitrary Precision Arithmetic](#arbitrary-precision-arithmetic)
     - [Adding `BigInteger` to Mumbler's Types](#adding-biginteger-to-mumblers-types)
     - [The Truffle Implementation](#the-truffle-implementation)
     - [Adding Literal `BigInteger` Numbers](#adding-literal-biginteger-numbers)
@@ -23,6 +23,7 @@ I don't want to undo all the work it took to make Mumbler fast, so I'm going to 
         - [Dispatching to the Right Function](#dispatching-to-the-right-function)
         - [Setting Nodes as Tail](#setting-nodes-as-tail)
 - [Conclusion](#conclusion)
+- [Update: Some Benchmark Numbers](#update-some-benchmark-numbers)
 
 <!-- markdown-toc end -->
 
@@ -429,3 +430,43 @@ Conclusion
 Truffle is really starting to show it's capabilities. Tail call optimization may have been a little more complicated than I had originally planned, but the dispatch cache is something that any non-trivial language would have to implement. I'm more suprised Mumbler was able to work without it. Adding arbitrary precision numbers was a cakewalk. I didn't expect the fallback from `long` to `BigInteger` would require so little code. I'm wondering how much effort it would take to add a full number stack with floats--ooh, or even rationals!
 
 At this point, you can almost use Mumbler to write Real Code&reg;. It probably needs strings and some more builtin functions. It could probably use the ability to create and call Java objects... stay tuned.
+
+
+Update: Some Benchmark Numbers
+==============================
+
+I neglected to show how tail call optimization has affected the speed of Mumbler. First, though, keep in mind the goal wasn't to make Mumbler faster, but to allow code like this.
+
+```scheme
+(define countdown
+  (lambda (n)
+    (if (< n 1)
+        0
+        (countdown (- n 1)))))
+```
+
+This is obviously a contrived example since `countdown` doesn't do anything except heat up your computer and return 0, but without tail call optimization this function would eventually throw an exception. That thankfully won't happen anymore, and with arbitrary precision numbers you can heat up your CPU all you want!
+
+Having said that, how did TCO affect execution speed? Well, I [created a benchmark](https://github.com/cesquivias/mumbler/blob/master/benchmark/countdown/countdown.mumbler) that does basically the same as the example above except it breaks up the execution into smaller recursive function calls so it won't throw an exception on the non-TCO version of Mumbler. That way we can directly compare TCO-Mumbler with non-TCO-Mumbler.
+
+Here's what I get with the non-optimized version of Mumbler. (Median after 5 runs).
+
+    mumbler (no TCO)
+    ======================
+    ('computation-time 410)
+
+Not so great. How about after I add all that TCO goodness?
+
+    mumbler (TCO)
+    ==================
+    ('computation-time 7)
+
+That's a helluva drop. I wouldn't expect such a drop since the same amount of work is being done, and Truffle was already optimizing our function calls in the non-TCO version. I think this is mainly due to [a bug that was fixed](https://github.com/cesquivias/mumbler/commit/74b89c2c7dceea36396731b9f8f6a4145ac2393b) while implementing TCO that allows further optimizations.
+
+If we run the non-TCO version but with the bug fix what do we get?
+
+    mumbler (no TCO, bug fixed)
+    ==================
+    ('computation-time 229)
+
+Well it certainly helped, but it didn't get near 7ms. It looks like Graal can make some excellent optimizations for control flow exceptions that remove a lot of the overhead of function calls and exception throwing. Bravo.

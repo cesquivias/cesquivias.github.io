@@ -102,7 +102,7 @@
 <p><strong>Table of Contents</strong></p>
 
 <ul>
- <li><a href="./#arbitrary-precision-arithmetic">Arbitrary Precision Arithmetic</a>
+ <li><a href="#arbitrary-precision-arithmetic">Arbitrary Precision Arithmetic</a>
   <ul>
    <li><a href="#adding-biginteger-to-mumblers-types">Adding <code>BigInteger</code> to Mumbler&rsquo;s Types</a></li>
    <li><a href="#the-truffle-implementation">The Truffle Implementation</a></li>
@@ -116,7 +116,8 @@
      <li><a href="#catching-a-tail-call">Catching a Tail Call</a></li>
      <li><a href="#dispatching-to-the-right-function">Dispatching to the Right Function</a></li>
      <li><a href="#setting-nodes-as-tail">Setting Nodes as Tail</a></li></ul></li></ul></li>
- <li><a href="#conclusion">Conclusion</a></li></ul>
+ <li><a href="#conclusion">Conclusion</a></li>
+ <li><a href="#update-some-benchmark-numbers">Update: Some Benchmark Numbers</a></li></ul>
 <!-- markdown-toc end-->
 
 <h1 id="arbitrary-precision-arithmetic">Arbitrary Precision Arithmetic</h1>
@@ -843,6 +844,58 @@
 <p>Truffle is really starting to show it&rsquo;s capabilities. Tail call optimization may have been a little more complicated than I had originally planned, but the dispatch cache is something that any non-trivial language would have to implement. I&rsquo;m more suprised Mumbler was able to work without it. Adding arbitrary precision numbers was a cakewalk. I didn&rsquo;t expect the fallback from <code>long</code> to <code>BigInteger</code> would require so little code. I&rsquo;m wondering how much effort it would take to add a full number stack with floats&mdash;ooh, or even rationals!</p>
 
 <p>At this point, you can almost use Mumbler to write Real Code&reg;. It probably needs strings and some more builtin functions. It could probably use the ability to create and call Java objects&hellip; stay tuned.</p>
+
+<h1 id="update-some-benchmark-numbers">Update: Some Benchmark Numbers</h1>
+
+<p>I neglected to show how tail call optimization has affected the speed of Mumbler. First, though, keep in mind the goal wasn&rsquo;t to make Mumbler faster, but to allow code like this.</p>
+
+<div class="brush: scheme">
+ <table class="sourcetable">
+  <tbody>
+   <tr>
+    <td class="linenos">
+     <div class="linenodiv">
+      <pre>1
+2
+3
+4
+5</pre></div></td>
+    <td class="code">
+     <div class="source">
+      <pre><span class="p">(</span><span class="k">define </span><span class="nv">countdown</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span>
+    <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&lt; </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="mi">0</span>
+        <span class="p">(</span><span class="nf">countdown</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)))))</span>
+</pre></div>
+</td></tr></tbody></table>
+</div>
+
+<p>This is obviously a contrived example since <code>countdown</code> doesn&rsquo;t do anything except heat up your computer and return 0, but without tail call optimization this function would eventually throw an exception. That thankfully won&rsquo;t happen anymore, and with arbitrary precision numbers you can heat up your CPU all you want!</p>
+
+<p>Having said that, how did TCO affect execution speed? Well, I <a href="https://github.com/cesquivias/mumbler/blob/master/benchmark/countdown/countdown.mumbler">created a benchmark</a> that does basically the same as the example above except it breaks up the execution into smaller recursive function calls so it won&rsquo;t throw an exception on the non-TCO version of Mumbler. That way we can directly compare TCO-Mumbler with non-TCO-Mumbler.</p>
+
+<p>Here&rsquo;s what I get with the non-optimized version of Mumbler. (Median after 5 runs).</p>
+
+<pre><code>mumbler (no TCO)
+======================
+('computation-time 410)</code></pre>
+
+<p>Not so great. How about after I add all that TCO goodness?</p>
+
+<pre><code>mumbler (TCO)
+==================
+('computation-time 7)</code></pre>
+
+<p>That&rsquo;s a helluva drop. I wouldn&rsquo;t expect such a drop since the same amount of work is being done, and Truffle was already optimizing our function calls in the non-TCO version. I think this is mainly due to <a href="https://github.com/cesquivias/mumbler/commit/74b89c2c7dceea36396731b9f8f6a4145ac2393b">a bug that was fixed</a> while implementing TCO that allows further optimizations.</p>
+
+<p>If we run the non-TCO version but with the bug fix what do we get?</p>
+
+<pre><code>mumbler (no TCO, bug fixed)
+==================
+('computation-time 229)</code></pre>
+
+<p>Well it certainly helped, but it didn&rsquo;t get near 7ms. It looks like Graal can make some excellent optimizations for control flow exceptions that remove a lot of the overhead of function calls and exception throwing. Bravo.</p>
   <footer>
     <script type="text/javascript">
       !function(d,s,id){
