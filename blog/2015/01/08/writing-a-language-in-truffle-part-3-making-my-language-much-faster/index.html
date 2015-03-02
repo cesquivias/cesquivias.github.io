@@ -98,6 +98,7 @@
 <p>With help from a couple of Truffle veterans, I was able to speed up my interpreter&rsquo;s speed. With a couple of key improvements and warming up the VM I was able to get the execution time down to 0.1 seconds. A 63x jump!</p>
 
 <p>Let&rsquo;s go through the changes I made to get such an improvement.</p>
+<!-- more-->
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again-->
 
 <p><strong>Table of Contents</strong></p>
@@ -111,49 +112,25 @@
  <li><a href="#making-function-calls-faster">Making Function Calls Faster</a></li>
  <li><a href="#conclusion">Conclusion</a></li></ul>
 <!-- markdown-toc end-->
-<!-- more-->
 
 <h1 id="warming-up-graal">Warming Up Graal</h1>
 
 <p>The first change is the simplest. The previous versions of the benchmark didn&rsquo;t warmup the virtual machine properly. After a few runs, things get a lot faster. How fast? Well, if we run our benchmark a few times before measuring our execution time like:</p>
 
 <div class="brush: scheme">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">)</span>
+ <pre><code>(fibonacci 30)
+(fibonacci 30)
+(fibonacci 30)
+(fibonacci 30)
+(fibonacci 30)
+(fibonacci 30)
+(fibonacci 30)
 
-<span class="p">(</span><span class="k">define </span><span class="nv">start</span> <span class="p">(</span><span class="nf">now</span><span class="p">))</span>
-<span class="p">(</span><span class="nf">println</span> <span class="p">(</span><span class="nf">fibonacci</span> <span class="mi">30</span><span class="p">))</span>
-<span class="p">(</span><span class="k">define </span><span class="nv">end</span> <span class="p">(</span><span class="nf">now</span><span class="p">))</span>
+(define start (now))
+(println (fibonacci 30))
+(define end (now))
 
-<span class="p">(</span><span class="nf">println</span> <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="k">quote </span><span class="nv">computation-time:</span><span class="p">)</span> <span class="p">(</span><span class="nb">- </span><span class="nv">end</span> <span class="nv">start</span><span class="p">)))</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+(println (list (quote computation-time:) (- end start)))</code></pre></div>
 
 <p>We go from</p>
 
@@ -198,114 +175,55 @@
 <p>The changes we make to cache the depth are pretty simple. Our lookup method now checks to see if we previously resolved the variable. If so, we take the fast path. If not, we call the old code with the extra step of logging the depth and storing it in a field.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@NodeField</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"slot"</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">FrameSlot</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">SymbolNode</span> <span class="kd">extends</span> <span class="n">MumblerNode</span> <span class="o">{</span>
+ <pre><code>@NodeField(name = "slot", type = FrameSlot.class)
+public abstract class SymbolNode extends MumblerNode {
 
-    <span class="nd">@CompilationFinal</span>
-    <span class="n">FrameSlot</span> <span class="n">resolvedSlot</span><span class="o">;</span>
-    <span class="nd">@CompilationFinal</span>
-    <span class="kt">int</span> <span class="n">lookupDepth</span><span class="o">;</span>
+    @CompilationFinal
+    FrameSlot resolvedSlot;
+    @CompilationFinal
+    int lookupDepth;
 
-    <span class="nd">@ExplodeLoop</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="n">readUpStack</span><span class="o">(</span><span class="n">FrameGet</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">getter</span><span class="o">,</span> <span class="n">Frame</span> <span class="n">frame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">resolvedSlot</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
-            <span class="k">this</span><span class="o">.</span><span class="na">resolveSlot</span><span class="o">(</span><span class="n">getter</span><span class="o">,</span> <span class="n">frame</span><span class="o">);</span>
-        <span class="o">}</span>
+    @ExplodeLoop
+    public &lt;T&gt; T readUpStack(FrameGet&lt;T&gt; getter, Frame frame)
+            throws FrameSlotTypeException {
+        if (this.resolvedSlot == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            this.resolveSlot(getter, frame);
+        }
 
-        <span class="n">Frame</span> <span class="n">lookupFrame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">;</span>
-        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">lookupDepth</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-            <span class="n">lookupFrame</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getLexicalScope</span><span class="o">(</span><span class="n">lookupFrame</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">return</span> <span class="n">getter</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">lookupFrame</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">resolvedSlot</span><span class="o">);</span>
-    <span class="o">}</span>
+        Frame lookupFrame = frame;
+        for (int i = 0; i &lt; this.lookupDepth; i++) {
+            lookupFrame = this.getLexicalScope(lookupFrame);
+        }
+        return getter.get(lookupFrame, this.resolvedSlot);
+    }
 
-    <span class="kd">private</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">resolveSlot</span><span class="o">(</span><span class="n">FrameGet</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">getter</span><span class="o">,</span> <span class="n">Frame</span> <span class="n">frame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-        <span class="n">FrameSlot</span> <span class="n">slot</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">();</span>
-        <span class="kt">int</span> <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-        <span class="n">Object</span> <span class="n">identifier</span> <span class="o">=</span> <span class="n">slot</span><span class="o">.</span><span class="na">getIdentifier</span><span class="o">();</span>
-        <span class="n">T</span> <span class="n">value</span> <span class="o">=</span> <span class="n">getter</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">frame</span><span class="o">,</span> <span class="n">slot</span><span class="o">);</span>
-        <span class="k">while</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">depth</span><span class="o">++;</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getLexicalScope</span><span class="o">(</span><span class="n">frame</span><span class="o">);</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">frame</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-                <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
-                <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"Unknown variable: "</span>
-                        <span class="o">+</span> <span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">().</span><span class="na">getIdentifier</span><span class="o">());</span>
-            <span class="o">}</span>
-            <span class="n">FrameDescriptor</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="na">getFrameDescriptor</span><span class="o">();</span>
-            <span class="n">slot</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="na">findFrameSlot</span><span class="o">(</span><span class="n">identifier</span><span class="o">);</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">slot</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">getter</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">frame</span><span class="o">,</span> <span class="n">slot</span><span class="o">);</span>
-            <span class="o">}</span>
-        <span class="o">}</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">lookupDepth</span> <span class="o">=</span> <span class="n">depth</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">resolvedSlot</span> <span class="o">=</span> <span class="n">slot</span><span class="o">;</span>
-    <span class="o">}</span>
+    private &lt;T&gt; void resolveSlot(FrameGet&lt;T&gt; getter, Frame frame)
+            throws FrameSlotTypeException {
+        FrameSlot slot = this.getSlot();
+        int depth = 0;
+        Object identifier = slot.getIdentifier();
+        T value = getter.get(frame, slot);
+        while (value == null) {
+            depth++;
+            frame = this.getLexicalScope(frame);
+            if (frame == null) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new RuntimeException("Unknown variable: "
+                        + this.getSlot().getIdentifier());
+            }
+            FrameDescriptor desc = frame.getFrameDescriptor();
+            slot = desc.findFrameSlot(identifier);
+            if (slot != null) {
+                value = getter.get(frame, slot);
+            }
+        }
+        this.lookupDepth = depth;
+        this.resolvedSlot = slot;
+    }
 
-    <span class="c1">//  more code..</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    //  more code..
+}</code></pre></div>
 
 <p>Because we have a <code>for</code> loop in <code>readUpStack</code> that will have a constant number of iterations we can annotate the method with <code>@ExplodeLoop</code> like we did in previous situations further speeding up the code once it hits the JIT compiler.</p>
 
@@ -331,78 +249,37 @@
 <p>Our new node will be simple since all it does is a get call. We just need to have a reference to the lexical scope and the variable&rsquo;s key into the map.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@NodeFields</span><span class="o">(</span><span class="n">value</span><span class="o">={</span>
-        <span class="nd">@NodeField</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"scope"</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">MaterializedFrame</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
-        <span class="nd">@NodeField</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"slot"</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">FrameSlot</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-<span class="o">})</span>
-<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">LexicalReadNode</span> <span class="kd">extends</span> <span class="n">MumblerNode</span> <span class="o">{</span>
-    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">MaterializedFrame</span> <span class="nf">getScope</span><span class="o">();</span>
-    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">FrameSlot</span> <span class="nf">getSlot</span><span class="o">();</span>
+ <pre><code>@NodeFields(value={
+        @NodeField(name = "scope", type = MaterializedFrame.class),
+        @NodeField(name = "slot", type = FrameSlot.class)
+})
+public abstract class LexicalReadNode extends MumblerNode {
+    protected abstract MaterializedFrame getScope();
+    protected abstract FrameSlot getSlot();
 
-    <span class="nd">@Specialization</span><span class="o">(</span><span class="n">rewriteOn</span> <span class="o">=</span> <span class="n">FrameSlotTypeException</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-    <span class="kd">protected</span> <span class="kt">long</span> <span class="nf">readLong</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getScope</span><span class="o">().</span><span class="na">getLong</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">());</span>
-    <span class="o">}</span>
+    @Specialization(rewriteOn = FrameSlotTypeException.class)
+    protected long readLong(VirtualFrame virtualFrame)
+            throws FrameSlotTypeException {
+        return this.getScope().getLong(this.getSlot());
+    }
 
-    <span class="nd">@Specialization</span><span class="o">(</span><span class="n">rewriteOn</span> <span class="o">=</span> <span class="n">FrameSlotTypeException</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-    <span class="kd">protected</span> <span class="kt">boolean</span> <span class="nf">readBoolean</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getScope</span><span class="o">().</span><span class="na">getBoolean</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">());</span>
-    <span class="o">}</span>
+    @Specialization(rewriteOn = FrameSlotTypeException.class)
+    protected boolean readBoolean(VirtualFrame virtualFrame)
+            throws FrameSlotTypeException {
+        return this.getScope().getBoolean(this.getSlot());
+    }
 
-    <span class="nd">@Specialization</span><span class="o">(</span><span class="n">rewriteOn</span> <span class="o">=</span> <span class="n">FrameSlotTypeException</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-    <span class="kd">protected</span> <span class="n">Object</span> <span class="nf">readObject</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getScope</span><span class="o">().</span><span class="na">getObject</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">());</span>
-    <span class="o">}</span>
+    @Specialization(rewriteOn = FrameSlotTypeException.class)
+    protected Object readObject(VirtualFrame virtualFrame)
+            throws FrameSlotTypeException {
+        return this.getScope().getObject(this.getSlot());
+    }
 
-    <span class="nd">@Specialization</span><span class="o">(</span><span class="n">contains</span> <span class="o">=</span> <span class="o">{</span><span class="s">"readLong"</span><span class="o">,</span> <span class="s">"readBoolean"</span><span class="o">,</span> <span class="s">"readObject"</span><span class="o">})</span>
-    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">read</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getScope</span><span class="o">().</span><span class="na">getValue</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getSlot</span><span class="o">());</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    @Specialization(contains = {"readLong", "readBoolean", "readObject"})
+    public Object read(VirtualFrame virtualFrame) {
+        return this.getScope().getValue(this.getSlot());
+    }
+}</code></pre></div>
 
 <p>At this point I&rsquo;ll assume you&rsquo;re familiar with Truffle&rsquo;s DSL so I won&rsquo;t explain all the little details. I refer to my <a href="http://cesquivias.github.io/blog/2014/12/02/writing-a-language-in-truffle-part-2-using-truffle-and-graal/">previous post</a> if you need a referesher.</p>
 
@@ -411,32 +288,14 @@
 <p>In our old, slow node we just need to rewrite the tree and insert an instance of <code>LexicalReadNode</code>.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4
-5
-6
-7
-8</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">private</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="n">readUpStack</span><span class="o">(</span><span class="n">FrameGet</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">getter</span><span class="o">,</span> <span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span>
-        <span class="kd">throws</span> <span class="n">FrameSlotTypeException</span> <span class="o">{</span>
-    <span class="c1">// unchanged readUpStack code</span>
+ <pre><code>private &lt;T&gt; T readUpStack(FrameGet&lt;T&gt; getter, VirtualFrame virtualFrame)
+        throws FrameSlotTypeException {
+    // unchanged readUpStack code
 
-    <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
-    <span class="k">this</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="n">LexicalReadNodeFactory</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">frame</span><span class="o">,</span> <span class="n">slot</span><span class="o">));</span>
-    <span class="k">return</span> <span class="n">value</span><span class="o">;</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    this.replace(LexicalReadNodeFactory.create(frame, slot));
+    return value;
+}</code></pre></div>
 
 <p>I just add the two lines to switch back to the interpreter so Graal can reoptimize the code, and I insert the new <code>LexicalReadNode</code> instance.</p>
 
@@ -460,64 +319,30 @@
 <p>The only changes necessary are in the <code>execute</code> method of the <code>InvokeNode</code> class.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre>    <span class="nd">@Override</span>
-    <span class="nd">@ExplodeLoop</span>
-    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">execute</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">MumblerFunction</span> <span class="n">function</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">evaluateFunction</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">);</span>
-        <span class="n">CompilerAsserts</span><span class="o">.</span><span class="na">compilationConstant</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+ <pre><code>    @Override
+    @ExplodeLoop
+    public Object execute(VirtualFrame virtualFrame) {
+        MumblerFunction function = this.evaluateFunction(virtualFrame);
+        CompilerAsserts.compilationConstant(this.argumentNodes.length);
 
-        <span class="n">Object</span><span class="o">[]</span> <span class="n">argumentValues</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span> <span class="o">+</span> <span class="mi">1</span><span class="o">];</span>
-        <span class="n">argumentValues</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="na">getLexicalScope</span><span class="o">();</span>
-        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-            <span class="n">argumentValues</span><span class="o">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">]</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">execute</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">);</span>
-        <span class="o">}</span>
+        Object[] argumentValues = new Object[this.argumentNodes.length + 1];
+        argumentValues[0] = function.getLexicalScope();
+        for (int i=0; i&lt;this.argumentNodes.length; i++) {
+            argumentValues[i+1] = this.argumentNodes[i].execute(virtualFrame);
+        }
 
-        <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">callNode</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>  <span class="o">{</span>
-            <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
-            <span class="k">this</span><span class="o">.</span><span class="na">callNode</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">insert</span><span class="o">(</span><span class="n">Truffle</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">createDirectCallNode</span><span class="o">(</span><span class="n">function</span><span class="o">.</span><span class="na">callTarget</span><span class="o">));</span>
-        <span class="o">}</span>
+        if (this.callNode == null)  {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            this.callNode = this.insert(Truffle.getRuntime().createDirectCallNode(function.callTarget));
+        }
 
-        <span class="k">if</span> <span class="o">(</span><span class="n">function</span><span class="o">.</span><span class="na">callTarget</span> <span class="o">!=</span> <span class="k">this</span><span class="o">.</span><span class="na">callNode</span><span class="o">.</span><span class="na">getCallTarget</span><span class="o">())</span> <span class="o">{</span>
-            <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnsupportedOperationException</span><span class="o">(</span><span class="s">"need to implement a proper inline cache."</span><span class="o">);</span>
-        <span class="o">}</span>
+        if (function.callTarget != this.callNode.getCallTarget()) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new UnsupportedOperationException("need to implement a proper inline cache.");
+        }
 
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">callNode</span><span class="o">.</span><span class="na">call</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">,</span> <span class="n">argumentValues</span><span class="o">);</span>
-    <span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+        return this.callNode.call(virtualFrame, argumentValues);
+    }</code></pre></div>
 
 <p>The method begins like it used to. We get the function then evaluate the arguments before proceeding to making the actual call. The main difference here is we check if <code>callNode</code> is set. If not we create a direct call node before proceeding. Because we need the function&rsquo;s call target value, we have to do this at runtime because we don&rsquo;t have that information when reading in the code.</p>
 

@@ -4,14 +4,14 @@
   <title>Cristian Esquivias: Posts tagged 'tutorial'</title>
   <description>Cristian Esquivias: Posts tagged 'tutorial'</description>
   <link>http://cesquivias.github.io/tags/tutorial.html</link>
-  <lastBuildDate>Thu, 15 Jan 2015 14:25:32 PST</lastBuildDate>
-  <pubDate>Thu, 15 Jan 2015 14:25:32 PST</pubDate>
+  <lastBuildDate>Thu, 15 Jan 2015 22:25:32 UT</lastBuildDate>
+  <pubDate>Thu, 15 Jan 2015 22:25:32 UT</pubDate>
   <ttl>1800</ttl>
   <item>
    <title>Writing a Language in Truffle. Part 4: Adding Features the Truffle Way</title>
    <link>http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/?utm_source=tutorial&amp;utm_medium=RSS</link>
    <guid>urn:http-cesquivias-github-io:-blog-2015-01-15-writing-a-language-in-truffle-part-4-adding-features-the-truffle-way</guid>
-   <pubDate>Thu, 15 Jan 2015 14:25:32 PST</pubDate>
+   <pubDate>Thu, 15 Jan 2015 22:25:32 UT</pubDate>
    <description>&lt;html&gt;
 &lt;p&gt;I ended &lt;a href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/"&gt;last time&lt;/a&gt; with a lisp that had the bare minimum of features and had a reached an acceptable speed. Now it&amp;rsquo;s time to make Mumbler a more useful languages with a couple of new features: arbitrary precision integers and&amp;mdash;what no lisp should be without&amp;mdash;tail call optimization.&lt;/p&gt;
 
@@ -20,31 +20,18 @@
    <title>Writing a Language in Truffle. Part 3: Making my Language (Much) Faster</title>
    <link>http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/?utm_source=tutorial&amp;utm_medium=RSS</link>
    <guid>urn:http-cesquivias-github-io:-blog-2015-01-08-writing-a-language-in-truffle-part-3-making-my-language-much-faster</guid>
-   <pubDate>Thu, 08 Jan 2015 21:49:36 PST</pubDate>
+   <pubDate>Fri, 09 Jan 2015 05:49:36 UT</pubDate>
    <description>&lt;html&gt;
 &lt;p&gt;After the last post, we have a working interpreter in Truffle (yay!), but the results weren&amp;rsquo;t very exciting. Running our fibonacci benchmark we got a paltry 6.3 seconds execution time using TruffleMumbler. Perhaps we can do better.&lt;/p&gt;
 
 &lt;p&gt;With help from a couple of Truffle veterans, I was able to speed up my interpreter&amp;rsquo;s speed. With a couple of key improvements and warming up the VM I was able to get the execution time down to 0.1 seconds. A 63x jump!&lt;/p&gt;
 
-&lt;p&gt;Let&amp;rsquo;s go through the changes I made to get such an improvement.&lt;/p&gt;
-&lt;!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again--&gt;
-
-&lt;p&gt;&lt;strong&gt;Table of Contents&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
- &lt;li&gt;&lt;a href="#warming-up-graal"&gt;Warming Up Graal&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="#improving-variable-lookup"&gt;Improving Variable Lookup&lt;/a&gt;
-  &lt;ul&gt;
-   &lt;li&gt;&lt;a href="#remember-scope-depth"&gt;Remember Scope Depth&lt;/a&gt;&lt;/li&gt;
-   &lt;li&gt;&lt;a href="#direct-lookup-to-lexical-scope"&gt;Direct Lookup to Lexical Scope&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="#making-function-calls-faster"&gt;Making Function Calls Faster&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="#conclusion"&gt;Conclusion&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
-&lt;!-- markdown-toc end--&gt;&lt;a href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/?utm_source=tutorial&amp;amp;utm_medium=RSS"&gt;&lt;em&gt;More&amp;hellip;&lt;/em&gt;&lt;/a&gt;&lt;/html&gt;</description></item>
+&lt;p&gt;Let&amp;rsquo;s go through the changes I made to get such an improvement.&lt;/p&gt;&lt;a href="http://cesquivias.github.io/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/?utm_source=tutorial&amp;amp;utm_medium=RSS"&gt;&lt;em&gt;More&amp;hellip;&lt;/em&gt;&lt;/a&gt;&lt;/html&gt;</description></item>
   <item>
    <title>Writing a Language in Truffle. Part 2: Using Truffle and Graal</title>
    <link>http://cesquivias.github.io/blog/2014/12/02/writing-a-language-in-truffle-part-2-using-truffle-and-graal/?utm_source=tutorial&amp;utm_medium=RSS</link>
    <guid>urn:http-cesquivias-github-io:-blog-2014-12-02-writing-a-language-in-truffle-part-2-using-truffle-and-graal</guid>
-   <pubDate>Tue, 02 Dec 2014 23:21:26 PST</pubDate>
+   <pubDate>Wed, 03 Dec 2014 07:21:26 UT</pubDate>
    <description>&lt;html&gt;
 &lt;p&gt;I was hoping to get this next installment out earlier. Sorry for the delay. Now after Thanksgiving, a vacation and a bout of the flu I&amp;rsquo;m ready to get back into it.&lt;/p&gt;
 
@@ -53,7 +40,7 @@
    <title>Writing a Language in Truffle. Part 1: A Simple, Slow Interpreter</title>
    <link>http://cesquivias.github.io/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/?utm_source=tutorial&amp;utm_medium=RSS</link>
    <guid>urn:http-cesquivias-github-io:-blog-2014-10-13-writing-a-language-in-truffle-part-1-a-simple-slow-interpreter</guid>
-   <pubDate>Mon, 13 Oct 2014 23:25:17 PST</pubDate>
+   <pubDate>Tue, 14 Oct 2014 06:25:17 UT</pubDate>
    <description>&lt;html&gt;
 &lt;p class="subtitle"&gt;How hard is it to write a simple, fast interpreter? Let's find out.&lt;/p&gt;
 

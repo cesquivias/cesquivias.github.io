@@ -131,32 +131,14 @@
 <p>Since I&rsquo;m adding a new data type to Mumbler&rsquo;s interpreter I need to update the class that defines all the built-in types. So I crack open <code>MumblerTypes</code> and add <code>BigInteger</code></p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4
-5
-6
-7
-8</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@TypeSystem</span><span class="o">({</span><span class="kt">long</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="kt">boolean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">BigInteger</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MumblerFunction</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
-    <span class="n">MumblerSymbol</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MumblerList</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MumblerTypes</span> <span class="o">{</span>
-    <span class="nd">@ImplicitCast</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="n">BigInteger</span> <span class="nf">castBigInteger</span><span class="o">(</span><span class="kt">long</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">BigInteger</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>@TypeSystem({long.class, boolean.class, BigInteger.class, MumblerFunction.class,
+    MumblerSymbol.class, MumblerList.class})
+public class MumblerTypes {
+    @ImplicitCast
+    public static BigInteger castBigInteger(long value) {
+        return BigInteger.valueOf(value);
+    }
+}</code></pre></div>
 
 <p>The change is simple enough. I add <code>BigInteger.class</code> to the list in <code>@TypeSystem</code>. Remember that the order of the types matters. Types that appear earlier bind more tightly than later ones. If I put <code>BigInteger</code> before <code>long</code> than operations would try to return <code>BigInteger</code> first, succeed, and never get to <code>long</code>. Bad news for performance.</p>
 
@@ -165,36 +147,16 @@
 <p>The last thing I need to do to make <code>BigInteger</code> a first class citizen is allow all <code>MumblerNode</code> objects to return a <code>BigInteger</code> object. So we just add another method to our base node.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@TypeSystemReference</span><span class="o">(</span><span class="n">MumblerTypes</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-<span class="nd">@NodeInfo</span><span class="o">(</span><span class="n">language</span> <span class="o">=</span> <span class="s">"Mumbler Language"</span><span class="o">,</span> <span class="n">description</span> <span class="o">=</span> <span class="s">"The abstract base node for all expressions"</span><span class="o">)</span>
-<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">MumblerNode</span> <span class="kd">extends</span> <span class="n">Node</span> <span class="o">{</span>
-    <span class="c1">// other execute methods...</span>
+ <pre><code>@TypeSystemReference(MumblerTypes.class)
+@NodeInfo(language = "Mumbler Language", description = "The abstract base node for all expressions")
+public abstract class MumblerNode extends Node {
+    // other execute methods...
 
-    <span class="kd">public</span> <span class="n">BigInteger</span> <span class="nf">executeBigInteger</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span>
-            <span class="kd">throws</span> <span class="n">UnexpectedResultException</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">MumblerTypesGen</span><span class="o">.</span><span class="na">expectBigInteger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">));</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    public BigInteger executeBigInteger(VirtualFrame virtualFrame)
+            throws UnexpectedResultException {
+        return MumblerTypesGen.expectBigInteger(this.execute(virtualFrame));
+    }
+}</code></pre></div>
 
 <p>That&rsquo;s it. Now all nodes can return <code>BigInteger</code> numbers. One problem, nothing yet returns <code>BigInteger</code> numbers. Where would we want to return arbitrarily long numbers? Why, when we add, substract or multiply two numbers and they no longer fit in a <code>long</code>. Of course!</p>
 
@@ -203,62 +165,26 @@
 <p>The first problem is Java&rsquo;s <code>+</code>, <code>-</code> and <code>*</code> operators just wrap around if we go passed MAX/MIN_VALUE. Thankfully, Java8 added new methods to <code>java.lang.Math</code> that will throw an exception if the operation overflows. Since Truffle supports Java7 they backported these methods to their <code>com.oracle.truffle.api.ExactMath</code> class. Now we can fallback on <code>BigInteger</code> if the value won&rsquo;t fit in a <code>long</code>. For example, the <code>AddBuiltinNode</code>&rsquo;s <code>add</code> method now looks like this.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">value0</span><span class="o">,</span> <span class="kt">long</span> <span class="n">value1</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">return</span> <span class="n">ExactMath</span><span class="o">.</span><span class="na">addExact</span><span class="o">(</span><span class="n">value0</span><span class="o">,</span> <span class="n">value1</span><span class="o">);</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>public long add(long value0, long value1) {
+    return ExactMath.addExact(value0, value1);
+}</code></pre></div>
 
 <p>We still need to catch the exception. Truffle&rsquo;s <code>@Specialization</code> annotation has a <code>rewriteOn</code> field where we can say &ldquo;if an <code>ArithmeticException</code> is thrown rewrite the AST and upcast <code>long</code> to <code>BigInteger</code>.&rdquo; Of course, if we&rsquo;re going to upcast to <code>BigInteger</code> we&rsquo;ll need a method add two <code>BigInteger</code> objects.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@NodeInfo</span><span class="o">(</span><span class="n">shortName</span> <span class="o">=</span> <span class="s">"+"</span><span class="o">)</span>
-<span class="nd">@GenerateNodeFactory</span>
-<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AddBuiltinNode</span> <span class="kd">extends</span> <span class="n">BuiltinNode</span> <span class="o">{</span>
-    <span class="nd">@Specialization</span><span class="o">(</span><span class="n">rewriteOn</span> <span class="o">=</span> <span class="n">ArithmeticException</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">value0</span><span class="o">,</span> <span class="kt">long</span> <span class="n">value1</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">ExactMath</span><span class="o">.</span><span class="na">addExact</span><span class="o">(</span><span class="n">value0</span><span class="o">,</span> <span class="n">value1</span><span class="o">);</span>
-    <span class="o">}</span>
+ <pre><code>@NodeInfo(shortName = "+")
+@GenerateNodeFactory
+public abstract class AddBuiltinNode extends BuiltinNode {
+    @Specialization(rewriteOn = ArithmeticException.class)
+    public long add(long value0, long value1) {
+        return ExactMath.addExact(value0, value1);
+    }
 
-    <span class="nd">@Specialization</span>
-    <span class="kd">protected</span> <span class="n">BigInteger</span> <span class="nf">add</span><span class="o">(</span><span class="n">BigInteger</span> <span class="n">value0</span><span class="o">,</span> <span class="n">BigInteger</span> <span class="n">value1</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">value0</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">value1</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    @Specialization
+    protected BigInteger add(BigInteger value0, BigInteger value1) {
+        return value0.add(value1);
+    }
+}</code></pre></div>
 
 <p>This is the new <code>AddBuiltinNode</code> class. It contains the old <code>add</code> method for long but now uses <code>ExactMath.addExact</code>, and the <code>@Specialization</code> annotation now states to rewrite the AST on an <code>ArithmeticException</code>. We&rsquo;ve also added <code>add</code> for <code>BigInteger</code>. Since we don&rsquo;t expect any exception here it just adds and returns.</p>
 
@@ -269,88 +195,40 @@
 <p>The final piece of the arbitrary precision puzzle is allowing users to write any number and have Mumbler create the proper number type. The code to create literal <code>long</code> nodes is in place. I just need to add a literal node for <code>BigInteger</code> if the number can&rsquo;t be cast to <code>long</code>. First the literal <code>BigIntegerNode</code> class.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BigIntegerNode</span> <span class="kd">extends</span> <span class="n">MumblerNode</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">final</span> <span class="n">BigInteger</span> <span class="n">value</span><span class="o">;</span>
+ <pre><code>
+public class BigIntegerNode extends MumblerNode {
+    public final BigInteger value;
 
-    <span class="kd">public</span> <span class="nf">BigIntegerNode</span><span class="o">(</span><span class="n">BigInteger</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
-    <span class="o">}</span>
+    public BigIntegerNode(BigInteger value) {
+        this.value = value;
+    }
 
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="n">BigInteger</span> <span class="nf">executeBigInteger</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-    <span class="o">}</span>
+    @Override
+    public BigInteger executeBigInteger(VirtualFrame virtualFrame) {
+        return this.value;
+    }
 
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">execute</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    @Override
+    public Object execute(VirtualFrame virtualFrame) {
+        return this.value;
+    }
+}</code></pre></div>
 
 <p>Very simple. Just return the <code>BigInteger</code> object. So where do I create these objects? I have to modify the <code>Reader</code> to create <code>BigIntegerNode</code> objects if <code>LongNode</code> won&rsquo;t work. I&rsquo;ll optimistically try to create a <code>long</code> and only if there&rsquo;s an exception will <code>Reader</code> fallback on <code>BigIntegerNode</code>. Here&rsquo;s the relevent part of the <code>Reader.readNumber</code>.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">private</span> <span class="kd">static</span> <span class="n">Convertible</span> <span class="nf">readNumber</span><span class="o">(</span><span class="n">PushbackReader</span> <span class="n">pstream</span><span class="o">)</span>
-        <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-    <span class="c1">// read number from PushbackReader...</span>
-    <span class="k">try</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nf">LiteralConvertible</span><span class="o">(</span><span class="k">new</span> <span class="n">LongNode</span><span class="o">(</span>
-                <span class="n">Long</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">toString</span><span class="o">(),</span> <span class="mi">10</span><span class="o">)));</span>
-    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NumberFormatException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-        <span class="c1">// Number doesn&#39;t fit in a long. Using BigInteger.</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nf">LiteralConvertible</span><span class="o">(</span><span class="k">new</span> <span class="n">BigIntegerNode</span><span class="o">(</span>
-                <span class="k">new</span> <span class="nf">BigInteger</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">toString</span><span class="o">(),</span> <span class="mi">10</span><span class="o">)));</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>private static Convertible readNumber(PushbackReader pstream)
+        throws IOException {
+    // read number from PushbackReader...
+    try {
+        return new LiteralConvertible(new LongNode(
+                Long.valueOf(buffer.toString(), 10)));
+    } catch (NumberFormatException e) {
+        // Number doesn't fit in a long. Using BigInteger.
+        return new LiteralConvertible(new BigIntegerNode(
+                new BigInteger(buffer.toString(), 10)));
+    }
+}</code></pre></div>
 
 <p>If <code>Long.valueOf</code> throws a <code>NumberFormatException</code> (which in this method will only happen if the number is too big to fit into a <code>long</code> value) then we create a <code>BigIntegerNode</code>. We&rsquo;re done. We don&rsquo;t need to make any other changes. Now you can add to your heart&rsquo;s content!</p>
 
@@ -373,24 +251,10 @@
 <p>Every time the last function is about to be called, you first jump back to the caller and call it from there. For example, say we were computing the factorial of a number, a prototypical lisp function. The code would look something like this:</p>
 
 <div class="brush: scheme">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="p">(</span><span class="k">define </span><span class="nv">factorial</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">n</span> <span class="nv">product</span><span class="p">)</span>
-                    <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&lt; </span><span class="nv">n</span> <span class="mi">2</span><span class="p">)</span>
-                        <span class="nv">product</span>
-                        <span class="p">(</span><span class="nf">factorial</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="nb">* </span><span class="nv">n</span> <span class="nv">product</span><span class="p">)))))</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>(define factorial (lambda (n product)
+                    (if (&lt; n 2)
+                        product
+                        (factorial (- n 1) (* n product)))))</code></pre></div>
 
 <p>Without TCO Mumbler would create a new frame on the call stack for every call to factorial like:</p>
 
@@ -417,34 +281,15 @@
 <p>So let&rsquo;s create our special tail call exception.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TailCallException</span> <span class="kd">extends</span> <span class="n">ControlFlowException</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">final</span> <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">;</span>
-    <span class="kd">public</span> <span class="kd">final</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">arguments</span><span class="o">;</span>
+ <pre><code>public class TailCallException extends ControlFlowException {
+    public final CallTarget callTarget;
+    public final Object[] arguments;
 
-    <span class="kd">public</span> <span class="nf">TailCallException</span><span class="o">(</span><span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">arguments</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">callTarget</span> <span class="o">=</span> <span class="n">callTarget</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">arguments</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    public TailCallException(CallTarget callTarget, Object[] arguments) {
+        this.callTarget = callTarget;
+        this.arguments = arguments;
+    }
+}</code></pre></div>
 
 <p>That was easy. The class contains the function (<code>CallTarget</code>) that&rsquo;s going to be called plus all the arguments. All the arguments have been evaluated before we throw the exception. The <code>CallTarget</code> objects are created when we build our functions. You can read the previous post on <a href="http://cesquivias.github.io/blog/2014/12/02/writing-a-language-in-truffle-part-2-using-truffle-and-graal/#lambdanode">function creation</a> to see how it&rsquo;s created. With these two pieces of information I can make a function call. Technically, we need a <code>VirtualFrame</code> object but we&rsquo;ll get that from the caller.</p>
 
@@ -453,52 +298,24 @@
 <p>So when we&rsquo;re about to execute that final node in the function&rsquo;s AST, we want to throw a <code>TailCallException</code> instead. All function calls occur in the <code>InvokeNode.execute</code> method so let&rsquo;s update that code.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="nd">@Override</span>
-<span class="nd">@ExplodeLoop</span>
-<span class="kd">public</span> <span class="n">Object</span> <span class="nf">execute</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">MumblerFunction</span> <span class="n">function</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">evaluateFunction</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">);</span>
-    <span class="n">CompilerAsserts</span><span class="o">.</span><span class="na">compilationConstant</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+ <pre><code>@Override
+@ExplodeLoop
+public Object execute(VirtualFrame virtualFrame) {
+    MumblerFunction function = this.evaluateFunction(virtualFrame);
+    CompilerAsserts.compilationConstant(this.argumentNodes.length);
 
-    <span class="n">Object</span><span class="o">[]</span> <span class="n">argumentValues</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span> <span class="o">+</span> <span class="mi">1</span><span class="o">];</span>
-    <span class="n">argumentValues</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="na">getLexicalScope</span><span class="o">();</span>
-    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-        <span class="n">argumentValues</span><span class="o">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">]</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">argumentNodes</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">execute</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">);</span>
-    <span class="o">}</span>
+    Object[] argumentValues = new Object[this.argumentNodes.length + 1];
+    argumentValues[0] = function.getLexicalScope();
+    for (int i=0; i&lt;this.argumentNodes.length; i++) {
+        argumentValues[i+1] = this.argumentNodes[i].execute(virtualFrame);
+    }
 
-    <span class="k">if</span> <span class="o">(</span><span class="n">CompilerAsserts</span><span class="o">.</span><span class="na">compilationConstant</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">isTail</span><span class="o">()))</span> <span class="o">{</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nf">TailCallException</span><span class="o">(</span><span class="n">function</span><span class="o">.</span><span class="na">callTarget</span><span class="o">,</span> <span class="n">argumentValues</span><span class="o">);</span>
-    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">call</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">,</span> <span class="n">function</span><span class="o">.</span><span class="na">callTarget</span><span class="o">,</span> <span class="n">argumentValues</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    if (CompilerAsserts.compilationConstant(this.isTail())) {
+        throw new TailCallException(function.callTarget, argumentValues);
+    } else {
+        return this.call(virtualFrame, function.callTarget, argumentValues);
+    }
+}</code></pre></div>
 
 <p>The method starts like before: evaluate the function, evaluate the arguments. After that we check if the node is in the tail position. I&rsquo;ll show how that&rsquo;s set later; for now assume it&rsquo;s set to the correct value. There&rsquo;s a call to <code>CompilerAsserts.compilationConstant</code> to tell Truffle this value is constant. A function call in the tail position isn&rsquo;t going to move so we may as well eke out as much performance as we can. If the node is in the tail position then we create a <code>TailCallException</code> and throw it. If not we make the call like normal.</p>
 
@@ -509,38 +326,17 @@
 <p>I want to catch the exception in the body of the caller. So, when I call a function there&rsquo;s a chance that function may say, &ldquo;Hey, take care of this function call for me.&rdquo; Okay, so when we call a function we have to wrap it in a try/catch in case it throws a <code>TailCallException</code>. But wait, what about the function call from <code>TailCallException</code>? Couldn&rsquo;t that also throw another <code>TailCallException</code>? Yes! In the <code>factorial</code> example above the caller function () had to handle 3 tail calls. So not only do we have to handle the normal function, but we have to be prepared to catch any number of <code>TailCallException</code>. How will I do that? Let&rsquo;s look at the <code>InvokeNode.call</code> method.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="n">Object</span> <span class="nf">call</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">,</span> <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">,</span>
-        <span class="n">Object</span><span class="o">[]</span> <span class="n">arguments</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">try</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">dispatchNode</span><span class="o">.</span><span class="na">executeDispatch</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">,</span>
-                    <span class="n">callTarget</span><span class="o">,</span> <span class="n">arguments</span><span class="o">);</span>
-        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">TailCallException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">callTarget</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">callTarget</span><span class="o">;</span>
-            <span class="n">arguments</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">arguments</span><span class="o">;</span>
-        <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>public Object call(VirtualFrame virtualFrame, CallTarget callTarget,
+        Object[] arguments) {
+    while (true) {
+        try {
+            return this.dispatchNode.executeDispatch(virtualFrame,
+                    callTarget, arguments);
+        } catch (TailCallException e) {
+            callTarget = e.callTarget;
+            arguments = e.arguments;
+        }
+}</code></pre></div>
 
 <p>You can see buried underneath all the wrappings is a call to our dispatch node that will take care of the actual call. Outside of that we catch the <code>TailCallException</code> and keep trying until we return normally. We basically keep going around and call the dispatch node however many times it takes until a <code>TailCallException</code> is <em>not</em> thrown. If a call throws a <code>TailCallException</code> we catch it and start over with the new values.</p>
 
@@ -553,170 +349,79 @@
 <p>The dispatch node starts with <code>UninitializedDispatchNode</code>. The job of this node is to keep track of how big the dispatch cache is. If it exceeds the limit we fall back on <code>IndirectCallNode</code>. If not, we create a <code>DirectCallNode</code> for the current function and use it.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">final</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UninitializedDispatchNode</span> <span class="kd">extends</span> <span class="n">DispatchNode</span> <span class="o">{</span>
-    <span class="nd">@Override</span>
-    <span class="kd">protected</span> <span class="n">Object</span> <span class="nf">executeDispatch</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">,</span>
-            <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">arguments</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">CompilerDirectives</span><span class="o">.</span><span class="na">transferToInterpreterAndInvalidate</span><span class="o">();</span>
+ <pre><code>final public class UninitializedDispatchNode extends DispatchNode {
+    @Override
+    protected Object executeDispatch(VirtualFrame virtualFrame,
+            CallTarget callTarget, Object[] arguments) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
 
-        <span class="n">Node</span> <span class="n">cur</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
-        <span class="kt">int</span> <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-        <span class="k">while</span> <span class="o">(</span><span class="n">cur</span><span class="o">.</span><span class="na">getParent</span><span class="o">()</span> <span class="k">instanceof</span> <span class="n">DispatchNode</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="na">getParent</span><span class="o">();</span>
-            <span class="n">depth</span><span class="o">++;</span>
-        <span class="o">}</span>
-        <span class="n">InvokeNode</span> <span class="n">invokeNode</span> <span class="o">=</span> <span class="o">(</span><span class="n">InvokeNode</span><span class="o">)</span> <span class="n">cur</span><span class="o">.</span><span class="na">getParent</span><span class="o">();</span>
+        Node cur = this;
+        int depth = 0;
+        while (cur.getParent() instanceof DispatchNode) {
+            cur = cur.getParent();
+            depth++;
+        }
+        InvokeNode invokeNode = (InvokeNode) cur.getParent();
 
-        <span class="n">DispatchNode</span> <span class="n">replacement</span><span class="o">;</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">depth</span> <span class="o">&lt;</span> <span class="n">INLINE_CACHE_SIZE</span><span class="o">)</span> <span class="o">{</span>
-            <span class="c1">// There&#39;s still room in the cache. Add a new DirectDispatchNode.</span>
-            <span class="n">DispatchNode</span> <span class="n">next</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UninitializedDispatchNode</span><span class="o">();</span>
-            <span class="n">replacement</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DirectDispatchNode</span><span class="o">(</span><span class="n">next</span><span class="o">,</span> <span class="n">callTarget</span><span class="o">);</span>
-            <span class="k">this</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="n">replacement</span><span class="o">);</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-            <span class="n">replacement</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GenericDispatchNode</span><span class="o">();</span>
-            <span class="n">invokeNode</span><span class="o">.</span><span class="na">dispatchNode</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="n">replacement</span><span class="o">);</span>
-        <span class="o">}</span>
+        DispatchNode replacement;
+        if (depth &lt; INLINE_CACHE_SIZE) {
+            // There's still room in the cache. Add a new DirectDispatchNode.
+            DispatchNode next = new UninitializedDispatchNode();
+            replacement = new DirectDispatchNode(next, callTarget);
+            this.replace(replacement);
+        } else {
+            replacement = new GenericDispatchNode();
+            invokeNode.dispatchNode.replace(replacement);
+        }
 
-        <span class="c1">// Call function with newly created dispatch node.</span>
-        <span class="k">return</span> <span class="n">replacement</span><span class="o">.</span><span class="na">executeDispatch</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">,</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">arguments</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+        // Call function with newly created dispatch node.
+        return replacement.executeDispatch(virtualFrame, callTarget, arguments);
+    }
+}</code></pre></div>
 
 <p>Starting from the top, the first thing we do is call <code>CompilerDirectives.transferToInterpreterAndInvalidate</code>. This node doesn&rsquo;t do anything except create other nodes and alters the AST. Graal will need to re-optimize the tree and <code>transferToInterpreterAndInvalidate</code> is how we tell Graal to do that. I then find the end of the linked list of dispatch nodes and also compute its size. I then check if the the max cache size is reached. If so, I switch to using <code>GenericDispatchNode</code>. If not, I create a new <code>DirectDispatchNode</code>. I stick a new <code>UninitializedDispatchNode</code> at the end so it can handle any future changes needed.</p>
 
 <p>If the tail call has been caught there will be a cached <code>DirectDispatchNode</code> waiting for me to reuse. Graal can then inline it. Let&rsquo;s see what <code>DirectDispatchNode</code> does.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DirectDispatchNode</span> <span class="kd">extends</span> <span class="n">DispatchNode</span> <span class="o">{</span>
-    <span class="kd">private</span> <span class="kd">final</span> <span class="n">CallTarget</span> <span class="n">cachedCallTarget</span><span class="o">;</span>
+ <pre><code>public class DirectDispatchNode extends DispatchNode {
+    private final CallTarget cachedCallTarget;
 
-    <span class="nd">@Child</span> <span class="kd">private</span> <span class="n">DirectCallNode</span> <span class="n">callCachedTargetNode</span><span class="o">;</span>
-    <span class="nd">@Child</span> <span class="kd">private</span> <span class="n">DispatchNode</span> <span class="n">nextNode</span><span class="o">;</span>
+    @Child private DirectCallNode callCachedTargetNode;
+    @Child private DispatchNode nextNode;
 
-    <span class="kd">public</span> <span class="nf">DirectDispatchNode</span><span class="o">(</span><span class="n">DispatchNode</span> <span class="n">next</span><span class="o">,</span> <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">cachedCallTarget</span> <span class="o">=</span> <span class="n">callTarget</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">callCachedTargetNode</span> <span class="o">=</span> <span class="n">Truffle</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">createDirectCallNode</span><span class="o">(</span>
-                <span class="k">this</span><span class="o">.</span><span class="na">cachedCallTarget</span><span class="o">);</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">nextNode</span> <span class="o">=</span> <span class="n">next</span><span class="o">;</span>
-    <span class="o">}</span>
+    public DirectDispatchNode(DispatchNode next, CallTarget callTarget) {
+        this.cachedCallTarget = callTarget;
+        this.callCachedTargetNode = Truffle.getRuntime().createDirectCallNode(
+                this.cachedCallTarget);
+        this.nextNode = next;
+    }
 
-    <span class="nd">@Override</span>
-    <span class="kd">protected</span> <span class="n">Object</span> <span class="nf">executeDispatch</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">frame</span><span class="o">,</span> <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">,</span>
-            <span class="n">Object</span><span class="o">[]</span> <span class="n">arguments</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">cachedCallTarget</span> <span class="o">==</span> <span class="n">callTarget</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">callCachedTargetNode</span><span class="o">.</span><span class="na">call</span><span class="o">(</span><span class="n">frame</span><span class="o">,</span> <span class="n">arguments</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">nextNode</span><span class="o">.</span><span class="na">executeDispatch</span><span class="o">(</span><span class="n">frame</span><span class="o">,</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">arguments</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    @Override
+    protected Object executeDispatch(VirtualFrame frame, CallTarget callTarget,
+            Object[] arguments) {
+        if (this.cachedCallTarget == callTarget) {
+            return this.callCachedTargetNode.call(frame, arguments);
+        }
+        return this.nextNode.executeDispatch(frame, callTarget, arguments);
+    }
+}</code></pre></div>
 
 <p>Pretty standard stuff for Truffle. We keep a reference to the <code>CallTarget</code> used to create the node, the <code>DirectCallNode</code> which I use to make the actual function call, and a reference to the next <code>DispatchNode</code> in the chain in case this isn&rsquo;t the <code>CallTarget</code> we were looking for. The <code>executeDispatch</code> method couldn&rsquo;t be simpler. We check if the <code>CallTarget</code> of the function is the same as the one used to create this node. If so, we call it. If not, we move one.</p>
 
 <p>What if we get to the end of our cache and need to handle any <code>CallTarget</code> sent to us?</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">GenericDispatchNode</span> <span class="kd">extends</span> <span class="n">DispatchNode</span> <span class="o">{</span>
-    <span class="nd">@Child</span> <span class="kd">private</span> <span class="n">IndirectCallNode</span> <span class="n">callNode</span> <span class="o">=</span> <span class="n">Truffle</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">()</span>
-            <span class="o">.</span><span class="na">createIndirectCallNode</span><span class="o">();</span>
+ <pre><code>public class GenericDispatchNode extends DispatchNode {
+    @Child private IndirectCallNode callNode = Truffle.getRuntime()
+            .createIndirectCallNode();
 
-    <span class="nd">@Override</span>
-    <span class="kd">protected</span> <span class="n">Object</span> <span class="nf">executeDispatch</span><span class="o">(</span><span class="n">VirtualFrame</span> <span class="n">virtualFrame</span><span class="o">,</span>
-            <span class="n">CallTarget</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">argumentValues</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">callNode</span><span class="o">.</span><span class="na">call</span><span class="o">(</span><span class="n">virtualFrame</span><span class="o">,</span> <span class="n">callTarget</span><span class="o">,</span> <span class="n">argumentValues</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    @Override
+    protected Object executeDispatch(VirtualFrame virtualFrame,
+            CallTarget callTarget, Object[] argumentValues) {
+        return this.callNode.call(virtualFrame, callTarget, argumentValues);
+    }
+}</code></pre></div>
 
 <p>When you thought things couldn&rsquo;t get simpler. We can reuse the same <code>IndirectCallNode</code> for all calls so we just pass in all the values to the <code>IndirectCallNode</code>.</p>
 
@@ -732,110 +437,47 @@
 <p>So first we add the method <code>isTail</code> to <code>MumblerNode</code>.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">MumblerNode</span> <span class="kd">extends</span> <span class="n">Node</span> <span class="o">{</span>
-    <span class="nd">@CompilationFinal</span>
-    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">isTail</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+ <pre><code>public abstract class MumblerNode extends Node {
+    @CompilationFinal
+    private boolean isTail = false;
 
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isTail</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">isTail</span><span class="o">;</span>
-    <span class="o">}</span>
+    public boolean isTail() {
+        return this.isTail;
+    }
 
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setIsTail</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">isTail</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
-    <span class="o">}</span>
+    public void setIsTail() {
+        this.isTail = true;
+    }
 
-    <span class="c1">// rest of class...</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    // rest of class...
+}</code></pre></div>
 
 <p>Since any node can be in the tail position of a function we need the predicate for all nodes. We&rsquo;ll set the default to <code>false</code> since most nodes won&rsquo;t be the last. We need to update the <code>IfNode</code> to propogate its &ldquo;tailness&rdquo; to its then/else nodes.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">IfNode</span> <span class="kd">extends</span> <span class="n">MumblerNode</span> <span class="o">{</span>
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setIsTail</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kd">super</span><span class="o">.</span><span class="na">setIsTail</span><span class="o">();</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">thenNode</span><span class="o">.</span><span class="na">setIsTail</span><span class="o">();</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">elseNode</span><span class="o">.</span><span class="na">setIsTail</span><span class="o">();</span>
-    <span class="o">}</span>
+ <pre><code>public class IfNode extends MumblerNode {
+    @Override
+    public void setIsTail() {
+        super.setIsTail();
+        this.thenNode.setIsTail();
+        this.elseNode.setIsTail();
+    }
 
-    <span class="c1">// rest of class...</span>
-<span class="o">}</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+    // rest of class...
+}</code></pre></div>
 
 <p>That was simple. Now all that&rsquo;s left is to set the last node in a <code>lambda</code> as a tail node. We modify <code>Reader</code>. While we create our <code>LambdaNode</code> we have to call <code>setIsTail</code> before we return the object.</p>
 
 <div class="brush: java">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="c1">// creating LambdaNode...</span>
-<span class="n">List</span><span class="o">&lt;</span><span class="n">MumblerNode</span><span class="o">&gt;</span> <span class="n">bodyNodes</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="k">for</span> <span class="o">(</span><span class="n">Convertible</span> <span class="n">bodyConv</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">list</span><span class="o">.</span><span class="na">subList</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">list</span><span class="o">.</span><span class="na">size</span><span class="o">()))</span> <span class="o">{</span>
-    <span class="n">bodyNodes</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bodyConv</span><span class="o">.</span><span class="na">convert</span><span class="o">());</span>
-<span class="o">}</span>
+ <pre><code>// creating LambdaNode...
+List&lt;MumblerNode&gt; bodyNodes = new ArrayList&lt;&gt;();
+for (Convertible bodyConv : this.list.subList(2, this.list.size())) {
+    bodyNodes.add(bodyConv.convert());
+}
 
-<span class="n">bodyNodes</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">bodyNodes</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">-</span> <span class="mi">1</span><span class="o">).</span><span class="na">setIsTail</span><span class="o">();</span>
+bodyNodes.get(bodyNodes.size() - 1).setIsTail();
 
-<span class="c1">// finish creating LambdaNode...</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+// finish creating LambdaNode...</code></pre></div>
 
 <p>We get the last element in the list of nodes of <code>lambda</code> and call <code>setIsTail</code>. With that, Mumbler will start the tail call flow whenever it encounters a function call in a tail position, even one embedded inside an <code>if</code>.</p>
 
@@ -850,26 +492,11 @@
 <p>I neglected to show how tail call optimization has affected the speed of Mumbler. First, though, keep in mind the goal wasn&rsquo;t to make Mumbler faster, but to allow code like this.</p>
 
 <div class="brush: scheme">
- <table class="sourcetable">
-  <tbody>
-   <tr>
-    <td class="linenos">
-     <div class="linenodiv">
-      <pre>1
-2
-3
-4
-5</pre></div></td>
-    <td class="code">
-     <div class="source">
-      <pre><span class="p">(</span><span class="k">define </span><span class="nv">countdown</span>
-  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span>
-    <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">&lt; </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="mi">0</span>
-        <span class="p">(</span><span class="nf">countdown</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)))))</span>
-</pre></div>
-</td></tr></tbody></table>
-</div>
+ <pre><code>(define countdown
+  (lambda (n)
+    (if (&lt; n 1)
+        0
+        (countdown (- n 1)))))</code></pre></div>
 
 <p>This is obviously a contrived example since <code>countdown</code> doesn&rsquo;t do anything except heat up your computer and return 0, but without tail call optimization this function would eventually throw an exception. That thankfully won&rsquo;t happen anymore, and with arbitrary precision numbers you can heat up your CPU all you want!</p>
 

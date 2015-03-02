@@ -110,19 +110,6 @@
 <p>With help from a couple of Truffle veterans, I was able to speed up my interpreter&rsquo;s speed. With a couple of key improvements and warming up the VM I was able to get the execution time down to 0.1 seconds. A 63x jump!</p>
 
 <p>Let&rsquo;s go through the changes I made to get such an improvement.</p>
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again-->
-
-<p><strong>Table of Contents</strong></p>
-
-<ul>
- <li><a href="#warming-up-graal">Warming Up Graal</a></li>
- <li><a href="#improving-variable-lookup">Improving Variable Lookup</a>
-  <ul>
-   <li><a href="#remember-scope-depth">Remember Scope Depth</a></li>
-   <li><a href="#direct-lookup-to-lexical-scope">Direct Lookup to Lexical Scope</a></li></ul></li>
- <li><a href="#making-function-calls-faster">Making Function Calls Faster</a></li>
- <li><a href="#conclusion">Conclusion</a></li></ul>
-<!-- markdown-toc end-->
 <footer class="read-more"><a href="/blog/2015/01/08/writing-a-language-in-truffle-part-3-making-my-language-much-faster/">&hellip;more&hellip;</a></footer>
 </article>
 <article>
@@ -151,13 +138,6 @@
 <p>Thankfully, a new solution is here. You can write your interpreter in a VM that is designed to optimize your interpreter with all that wonderful JIT compilation magic. Oracle labs has <a href="http://www.oracle.com/technetwork/oracle-labs/program-languages/overview/index-2301583.html">released its own VM</a> that hopes to make writing language interpreters both easy and fast. It can also leverage the huge ecosystem of the Java Virtual Machine (JVM). This modified JVM contains a new Just-In-Time (JIT) compiler that can speed up interpreters like my little lisp to near-Java speeds. The new JIT compiler is called Graal. To take advantage of Graal&rsquo;s JIT-y goodness you use the Truffle library to annotate your interpreter and give Graal some hints on invariants and type information. For this integration effort you get significant speedups in your interpreter without having to resort to writing a bytecode compiler plus you have the full power of Java at your disposal.</p>
 <footer class="read-more"><a href="/blog/2014/10/13/writing-a-language-in-truffle-part-1-a-simple-slow-interpreter/">&hellip;more&hellip;</a></footer>
 </article>
-<footer>
- <ul class="pagination">
-  <li class="disabled"><a href="#">
-    <quote>&larr;</quote></a></li>
-  <li class="active"><a href="/index.html">1</a></li>
-  <li class="disabled"><a href="#">
-    <quote>&rarr;</quote></a></li></ul></footer>
         </div>
       </div>
       <footer>

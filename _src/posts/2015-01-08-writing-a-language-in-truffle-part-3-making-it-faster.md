@@ -8,6 +8,7 @@ With help from a couple of Truffle veterans, I was able to speed up my interpret
 
 Let's go through the changes I made to get such an improvement.
 
+<!-- more -->
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again -->
 **Table of Contents**
@@ -20,8 +21,6 @@ Let's go through the changes I made to get such an improvement.
 - [Conclusion](#conclusion)
 
 <!-- markdown-toc end -->
-
-<!-- more -->
 
 Warming Up Graal
 ================
