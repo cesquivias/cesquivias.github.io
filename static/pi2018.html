@@ -8,7 +8,27 @@
     <header>
       <div>Total pins = <span id="total-pins"></span></div>
       <div>Crossing pins = <span id="cross-pins"></span></div>
-      <div>&pi; &asymp; total pins / crossing pins &asymp; <span id="pi"></span></div>
+      <div>
+        &pi; &asymp; total pins / crossing pins &asymp; <span id="pi"></span>
+      </div>
+      <div>
+        <datalist id="pin-ticks">
+          <option value="4" />
+          <option value="10" />
+          <option value="20" />
+          <option value="30" />
+          <option value="40" />
+          <option value="50" />
+          <option value="60" />
+          <option value="70" />
+          <option value="80" />
+          <option value="90" />
+          <option value="100" />
+        </datalist>
+        <label>Pins per second</label>
+        <input id="pins-per-sec" type="range" min="1" max="100" value="4" list="pin-ticks" />
+        <span id="pin-sec">4</span>
+      </div>
     </header>
 
     <canvas id="canvas" width="1280" height="960">
@@ -59,7 +79,16 @@ function throw_pins(num_pins) {
     document.getElementById('cross-pins').textContent = crossing_pins;
     document.getElementById('pi').textContent = (total_pins / crossing_pins).toFixed(5);
 }
-setInterval(() => throw_pins(1), 200);
+
+let pins_per_quarter_second = 1;
+setInterval(() => throw_pins(pins_per_quarter_second), 250);
+
+let pins_per_sec_label = document.getElementById('pin-sec');
+document.getElementById('pins-per-sec').addEventListener('change', (e) => {
+    let pins_per_sec = parseInt(e.target.value);
+    pins_per_sec_label.textContent = pins_per_sec;
+    pins_per_quarter_second = pins_per_sec / 4;
+});
 
     </script>
   </body>
