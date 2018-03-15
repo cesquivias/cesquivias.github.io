@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Happy &pi; Day 2018</title>
+  </head>
+
+  <body>
+    <header>
+      <div>Total pins = <span id="total-pins"></span></div>
+      <div>Crossing pins = <span id="cross-pins"></span></div>
+      <div>&pi; &asymp; total pins / crossing pins &asymp; <span id="pi"></span></div>
+    </header>
+
+    <canvas id="canvas" width="1280" height="960">
+    </canvas>
+    <script type="text/javascript">
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const width = canvas.width;
+const height = canvas.height;
+
+const pin_length = 40;
+const separation = 2 * pin_length;
+
+ctx.fillStyle = 'green';
+for (let i=separation; i<width; i += separation) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, height);
+    ctx.stroke();
+}
+
+let total_pins = 0;
+let crossing_pins = 0;
+
+function throw_pins(num_pins) {
+    for (let i=0; i<num_pins; i++) {
+        total_pins++;
+        let pin_theta = Math.PI * Math.random();
+        let x0 = Math.floor((width - 4*separation) * Math.random()) + 2*separation;
+        let y0 = Math.floor((height - 4*separation) * Math.random() + 2*separation);
+        let x1 = x0 + Math.cos(pin_theta) * pin_length;
+        let y1 = y0 + Math.sin(pin_theta) * pin_length;
+        let len = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+
+        let x_left = Math.min(x0, x1);
+        let x_len = Math.abs(x1 - x0);
+        if ((x_left % separation) + x_len >= separation) {
+            crossing_pins++;
+            ctx.strokeStyle = 'red';
+        } else {
+            ctx.strokeStyle = 'black';
+        }
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+    }
+
+    document.getElementById('total-pins').textContent = total_pins;
+    document.getElementById('cross-pins').textContent = crossing_pins;
+    document.getElementById('pi').textContent = (total_pins / crossing_pins).toFixed(5);
+}
+setInterval(() => throw_pins(1), 200);
+
+    </script>
+  </body>
+</html>
